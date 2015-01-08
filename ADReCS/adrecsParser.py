@@ -108,6 +108,9 @@ drugRoot = drugTree.getroot()
 
 recordsInserted = 0
 
+dbConnector.useDatabase()
+
+
 dbConnector.initDatabase()
 
 for ADR in adrRoot:
@@ -118,6 +121,8 @@ for ADR in adrRoot:
 	recordsInserted+=1
 	print("ADR with id", adrId, "inserted. Inserted", recordsInserted, "records")
 
+dbConnector.commit()
+
 for Drug in drugRoot:
 	drugId = insertDrug(Drug)
 	synonyms = Drug.find('DRUG_SYNONYMS')
@@ -127,6 +132,8 @@ for Drug in drugRoot:
 
 	recordsInserted+=1
 	print("Drug with id", drugId, "inserted. Inserted", recordsInserted, "records")
+
+dbConnector.commit()
 
 for ADR in adrRoot:
 	adrId = ADR.find('ADReCS_ID').text

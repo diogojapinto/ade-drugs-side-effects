@@ -75,9 +75,12 @@ def recreateDatabase():
 def createTables():
 	executeCommands(TABLES)
 
+def useDatabase():
+	cnx.database = DB_NAME
+
 def initDatabase():
 	recreateDatabase()
-	cnx.database = DB_NAME
+	useDatabase()
 	createTables()
 
 duplicates = 0
@@ -102,7 +105,9 @@ def insertInto(table, data):
 		duplicates+=1
 		print("Found", duplicates, "duplicates")
 	
-	
+
+def commit():
+	cnx.commit()
 
 def close():
 	cnx.commit()
