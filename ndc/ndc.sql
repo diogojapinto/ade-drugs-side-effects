@@ -14,6 +14,7 @@ CREATE TABLE drug (
 	marketing_category_name VARCHAR(100),
 	application_number VARCHAR(100),
 	labeler_name VARCHAR(100),
+	substance_name VARCHAR(100),
 	active_numerator_strength VARCHAR(100),
 	active_ingred_unit VARCHAR(100),
 	pharm_classes VARCHAR(100),
