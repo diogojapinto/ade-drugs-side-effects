@@ -12,15 +12,15 @@ def main():
                                 host='192.168.101.172',
                                 database='ndc_db')
 
-  drug_cmd = ("""INSERT INTO drug 
+  drug_cmd = ("""REPLACE INTO drug 
                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""")
 
   rows = file.readlines()
-  for r in rows[1:2]:
+  for r in rows:
 
     cursor = cnx.cursor()
 
-    data = r.split('\t')[:-1]            # to remove the last element (\r\n)
+    data = r.split('\t')            # to remove the last element (\r\n)
 
 
     # format the data strings accordingly
@@ -32,12 +32,13 @@ def main():
       data[9] = data[9][:4] + '-' + data[9][4:6] + '-' + data[9][6:]
 
     # print(*data, sep='\n')
+    print(data[0])
 
     try:
       cursor.execute(drug_cmd, tuple(data))
     except:
       print("Error inserting data: " + data[0])
-      conn.rollback()
+      cnx.rollback()
 
   cnx.commit()
         
