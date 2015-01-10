@@ -65,10 +65,6 @@ getNDCDrugs <- function() {
   return(res)
 }
 
-updateDrugsInfo <- function() {
-  # TODO
-}
-
 ##
 ## Medline
 ##
@@ -87,3 +83,16 @@ getSelectedRecords <- function(pmids) {
 getTextSearch <- function(terms) {
   
 }
+
+
+##
+## Execution
+##
+
+# 1. Retrieve drugs list from NDC
+
+drugs = getNDCDrugs()
+
+# 2. Associate aditional info from ADReCS
+
+# 3. Query the medline for contents similar to the colected information
