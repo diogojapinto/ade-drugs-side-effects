@@ -96,3 +96,5 @@ drugs = getNDCDrugs()
 # 2. Associate aditional info from ADReCS
 
 # 3. Query the medline for contents similar to the colected information
+
+# 4. Gather differences of slope between the before after entry in market approximate lines
