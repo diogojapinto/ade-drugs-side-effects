@@ -12,8 +12,13 @@ getDrugSynonyms <- function(con, drugId){
 	return(syns)
 }
 
-getDrugs <- function(con){
-	query <- "SELECT * FROM drug"
+getDrugs <- function(con, drug=""){
+
+	if(drug=="")
+		qs <- c("SELECT * FROM drug")
+	else
+		qs <- c('SELECT * FROM drug WHERE id = "', drug, '"')
+	query <- paste(qs,collapse="")
 	drugs <- query(con,query)
 	return(drugs)
 }
