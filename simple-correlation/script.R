@@ -59,7 +59,31 @@ drugs <- fetch(rs, n=-1)
 ## NDC queries
 ##
 
+getNDCDrugs <- function() {
+  query <- 'SELECT proprietary_name, non_proprietary_name, start_marketing_date, substance_name FROM drug'
+  res <- query(ndcConn, query)
+  return(res)
+}
+
+updateDrugsInfo <- function() {
+  # TODO
+}
+
 ##
 ## Medline
 ##
 
+getSelectedRecords <- function(pmids) {
+  qs <- c("SELECT pmid, date_created 
+           FROM medline_citation 
+           WHERE pmid IN (",
+          paste0(pmids, collapse=","),
+          ")")
+  query <- paste(qs, collapse="")
+  res <- query(medlineConn, query)
+  return(res)
+}
+
+getTextSearch <- function(terms) {
+  
+}
