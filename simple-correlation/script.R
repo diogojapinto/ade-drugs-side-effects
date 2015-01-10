@@ -1,7 +1,7 @@
 library("RMySQL")
 
 ##
-## Function to connect to databases (default is for ADReCS)
+## Function to connect to databases
 ##
 getConnection <- function(user='pcosta', password='pcosta', dbname, host='porto.fe.up.pt'){
   conn <- dbConnect(MySQL(), user=user, password=password, dbname=dbname, host=host)
@@ -20,7 +20,7 @@ query <- function(con, query, n=-1){
 ## Connections
 ##
 medlineConn <- getConnection(dbname='medline');
-adresConn <- getConnection(dbname='medline');
+adresConn <- getConnection(dbname='ADReCS');
 ndcConn <- getConnection(dbname='ndc_db');
 
 ##
@@ -35,7 +35,6 @@ getDrugSynonyms <- function(con, drugId){
 }
 
 getDrugs <- function(con, drug=""){
-  
   if(drug=="")
     qs <- c("SELECT * FROM drug")
   else
@@ -52,8 +51,8 @@ getDrugsByName <- function(con, drugName){
   return(res)
 }
 
-rs <- dbSendQuery(getConnection(), "SELECT drug.id, drug.name, drug_synonym.syn FROM drug JOIN drug_synonym ON drug.id = drug_synonym.drug")
-drugs <- fetch(rs, n=-1)
+# rs <- dbSendQuery(adresConn, "SELECT drug.id, drug.name, drug_synonym.syn FROM drug JOIN drug_synonym ON drug.id = drug_synonym.drug")
+# drugs <- fetch(rs, n=-1)
 
 ##
 ## NDC queries
@@ -69,19 +68,66 @@ getNDCDrugs <- function() {
 ## Medline
 ##
 
-getSelectedRecords <- function(pmids) {
+getSelectedRecordsInfo <- function(pmids) {
   qs <- c("SELECT pmid, date_created 
            FROM medline_citation 
            WHERE pmid IN (",
           paste0(pmids, collapse=","),
-          ")")
+          ") ORDER BY date_created")
   query <- paste(qs, collapse="")
   res <- query(medlineConn, query)
   return(res)
 }
 
-getTextSearch <- function(terms) {
+getInterestingRecords <- function(terms) {
+  terms_str <- paste0(terms, collapse=" ")
   
+  qs <- c("SELECT pmid
+           FROM medline_citation
+           WHERE MATCH(article_title, abstract_text)
+           AGAINST ('",
+          terms_str,
+          "')")
+  query <- paste(qs, collapse="")
+  res <- query(medlineConn, query)
+  
+  qs <- c("SELECT pmid
+           FROM medline_keyword_list
+           WHERE MATCH(keyword)
+           AGAINST ('",
+          terms_str,
+          "')")
+  query <- paste(qs, collapse="")
+  res <- rbind(res, query(medlineConn, query))
+  
+  qs <- c("SELECT pmid
+          FROM medline_mesh_heading
+          WHERE MATCH(descriptor_name)
+          AGAINST ('",
+          terms_str,
+          "')")
+  query <- paste(qs, collapse="")
+  res <- rbind(res, query(medlineConn, query))
+  
+  qs <- c("SELECT pmid
+          FROM medline_mesh_heading_qualifier
+          WHERE MATCH(descriptor_name)
+          AGAINST ('",
+          terms_str,
+          "')")
+  query <- paste(qs, collapse="")
+  res <- rbind(res, query(medlineConn, query))
+  
+  qs <- c("SELECT pmid
+          FROM medline_citation_other_abstract
+          WHERE MATCH(medline_citation_other_abstract)
+          AGAINST ('",
+          terms_str,
+          "')")
+  query <- paste(qs, collapse="")
+  res <- rbind(res, query(medlineConn, query))
+  
+  return(res)
 }
 
 
@@ -93,8 +139,19 @@ getTextSearch <- function(terms) {
 
 drugs = getNDCDrugs()
 
-# 2. Associate aditional info from ADReCS
+# 2. Query the medline for contents similar to the colected information
 
-# 3. Query the medline for contents similar to the colected information
+for(i in 1:length(drugs)) {
+  
+  terms <- c(drugs$proprietary_name, drugs$non_proprietary_name, drugs$substance_name)
+  
+  # 2.1. Associate aditional info from ADReCS
+  # TODO
+  
+  pmids <- getInterestingRecords(terms)
+  
+  if(!exists())
+  
+}
 
 # 4. Gather differences of slope between the before after entry in market approximate lines
