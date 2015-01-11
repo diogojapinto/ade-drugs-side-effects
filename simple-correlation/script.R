@@ -141,13 +141,13 @@ drugs = getNDCDrugs()
 
 # 2. Query the medline for contents similar to the colected information
 
-for(i in 1:length(drugs)) {
+for(i in 1:nrow(drugs)) {
   
-  terms <- c(drugs$proprietary_name, drugs$non_proprietary_name, drugs$substance_name)
+  terms <- c(drugs[i,]$proprietary_name, drugs[i,]$non_proprietary_name, drugs[i,]$substance_name)
   
   # 2.1. Associate aditional info from ADReCS
   # TODO
-  
+
   pmids <- getInterestingRecords(terms)
   
   if(!exists())
