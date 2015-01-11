@@ -51,8 +51,12 @@ getDrugsByName <- function(con, drugName){
   return(res)
 }
 
-# rs <- dbSendQuery(adresConn, "SELECT drug.id, drug.name, drug_synonym.syn FROM drug JOIN drug_synonym ON drug.id = drug_synonym.drug")
-# drugs <- fetch(rs, n=-1)
+getDrugsAdrs <- function(con, drug){
+  qs <- c('SELECT adr.term FROM adr JOIN drug_adr ON adr.id = drug_adr.adr_id WHERE drug_adr.drug_id = "', drug, '"')
+  query <- paste(qs, collapse="")
+  res <- query(con, query)
+  return(res)
+}
 
 ##
 ## NDC queries
@@ -146,11 +150,29 @@ for(i in 1:nrow(drugs)) {
   terms <- c(drugs[i,]$proprietary_name, drugs[i,]$non_proprietary_name, drugs[i,]$substance_name)
   
   # 2.1. Associate aditional info from ADReCS
-  # TODO
+  res <- getDrugsByName(adresConn,drugs[i,]$non_proprietary_name)
 
-  pmids <- getInterestingRecords(terms)
+  #Create empty dataset so it can be used in rbind
+  adrTerms <- data.frame(term=character())
+  for(j in 1:nrow(res)) {
+    #For each drug, get its known adrs
+    drugAdrs <- getDrugsAdrs(adresConn, res[j,])
+    adrTerms <- rbind(adrTerms, drugAdrs)
+  }
+
+  if( nrow(adrTerms) > 0 ){
+    terms <- adrTerms[,1]
+
+    #TODO
+    #2.2 Query medline with terms
+    #terms is a vector of adrs
+    #one element might be "Coagulation Factor Deficiencies"
+    #or "Hypoprothrombinaemia"
+  }
+
+  #pmids <- getInterestingRecords(terms)
   
-  if(!exists())
+  #if(!exists())
   
 }
 
