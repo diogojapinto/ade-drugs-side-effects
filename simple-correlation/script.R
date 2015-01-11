@@ -52,7 +52,7 @@ getDrugsByName <- function(con, drugName){
 }
 
 getDrugsAdrs <- function(con, drug){
-  qs <- c('SELECT adr.term FROM adr JOIN drug_adr ON adr.id = drug_adr.adr_id WHERE drug_adr.drug_id = "', drug, '"')
+  qs <- c('SELECT adr.term FROM adr JOIN drug_adr ON adr.id = drug_adr.adr_id WHERE drug_adr.drug_id = "', drug, '" UNION SELECT syn as term FROM adr_synonym JOIN adr ON adr.id = adr_synonym.adr JOIN drug_adr ON drug_adr.adr_id = adr.id WHERE drug_adr.drug_id = "', drug, '"')
   query <- paste(qs, collapse="")
   res <- query(con, query)
   return(res)
