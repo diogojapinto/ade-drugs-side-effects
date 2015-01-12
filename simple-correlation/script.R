@@ -1,4 +1,12 @@
 library("RMySQL")
+library("DBI")
+
+##
+## init
+##
+for(conn in dbListConnections(MySQL())) {
+  dbDisconnect(conn)
+}
 
 ##
 ## Function to connect to databases
@@ -63,7 +71,13 @@ getDrugsAdrs <- function(con, drug){
 ##
 
 getNDCDrugs <- function() {
-  query <- 'SELECT proprietary_name, non_proprietary_name, start_marketing_date, substance_name FROM drug'
+  query <- 'SELECT proprietary_name, non_proprietary_name, start_marketing_date FROM drug'
+  res <- query(ndcConn, query)
+  return(res)
+}
+
+getDistinctNDCDrugs <- function() {
+  query <- 'SELECT DISTINCT(non_proprietary_name) FROM drug'
   res <- query(ndcConn, query)
   return(res)
 }
@@ -74,8 +88,8 @@ getNDCDrugs <- function() {
 
 getSelectedRecordsInfo <- function(pmids) {
   qs <- c("SELECT pmid, date_created 
-           FROM medline_citation 
-           WHERE pmid IN (",
+          FROM medline_citation 
+          WHERE pmid IN (",
           paste0(pmids, collapse=","),
           ") ORDER BY date_created")
   query <- paste(qs, collapse="")
@@ -84,50 +98,50 @@ getSelectedRecordsInfo <- function(pmids) {
 }
 
 getInterestingRecords <- function(terms) {
-  terms_str <- paste0(terms, collapse=" ")
+  terms_str <- paste0(terms, collapse="\" \"")
   
   qs <- c("SELECT pmid
-           FROM medline_citation
-           WHERE MATCH(article_title, abstract_text)
-           AGAINST ('",
+            FROM medline_citation
+          WHERE MATCH(article_title, abstract_text)
+          AGAINST ('\"",
           terms_str,
-          "')")
+          "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
   res <- query(medlineConn, query)
   
   qs <- c("SELECT pmid
-           FROM medline_keyword_list
-           WHERE MATCH(keyword)
-           AGAINST ('",
+          FROM medline_keyword_list
+          WHERE MATCH(keyword)
+          AGAINST ('\"",
           terms_str,
-          "')")
+          "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
   res <- rbind(res, query(medlineConn, query))
   
   qs <- c("SELECT pmid
           FROM medline_mesh_heading
           WHERE MATCH(descriptor_name)
-          AGAINST ('",
+          AGAINST ('\"",
           terms_str,
-          "')")
+          "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
   res <- rbind(res, query(medlineConn, query))
   
   qs <- c("SELECT pmid
           FROM medline_mesh_heading_qualifier
           WHERE MATCH(descriptor_name)
-          AGAINST ('",
+          AGAINST ('\"",
           terms_str,
-          "')")
+          "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
   res <- rbind(res, query(medlineConn, query))
   
   qs <- c("SELECT pmid
           FROM medline_citation_other_abstract
-          WHERE MATCH(medline_citation_other_abstract)
-          AGAINST ('",
+          WHERE MATCH(abstract_text)
+          AGAINST ('\"",
           terms_str,
-          "')")
+          "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
   res <- rbind(res, query(medlineConn, query))
   
@@ -141,17 +155,19 @@ getInterestingRecords <- function(terms) {
 
 # 1. Retrieve drugs list from NDC
 
-drugs = getNDCDrugs()
+drugs <- getDistinctNDCDrugs()
+print(nrow(drugs))
+records <- list()
 
 # 2. Query the medline for contents similar to the colected information
 
 for(i in 1:nrow(drugs)) {
   
-  terms <- c(drugs[i,]$proprietary_name, drugs[i,]$non_proprietary_name, drugs[i,]$substance_name)
+  terms <- c(drugs[i,])
   
   # 2.1. Associate aditional info from ADReCS
-  res <- getDrugsByName(adresConn,drugs[i,]$non_proprietary_name)
-
+  res <- getDrugsByName(adresConn,drugs[i,])
+  
   #Create empty dataset so it can be used in rbind
   adrTerms <- data.frame(term=character())
   for(j in 1:nrow(res)) {
@@ -159,21 +175,39 @@ for(i in 1:nrow(drugs)) {
     drugAdrs <- getDrugsAdrs(adresConn, res[j,])
     adrTerms <- rbind(adrTerms, drugAdrs)
   }
-
-  if( nrow(adrTerms) > 0 ){
+  
+  if(nrow(adrTerms) > 0){
     terms <- adrTerms[,1]
-
-    #TODO
-    #2.2 Query medline with terms
-    #terms is a vector of adrs
-    #one element might be "Coagulation Factor Deficiencies"
-    #or "Hypoprothrombinaemia"
+    
+    #2.2 Query medline with terms    
+    pmids <- getInterestingRecords(terms)
+    info <- getSelectedRecordsInfo(pmids)
+    
+    # save the collected info
+    rec <- list(terms, info)
+    records[[length(records) + 1]] <- rec
+    print(i)
+    
+    return(0)
   }
-
-  #pmids <- getInterestingRecords(terms)
-  
-  #if(!exists())
-  
 }
 
-# 4. Gather differences of slope between the before after entry in market approximate lines
+save(records, file="records.R")
+
+# 3. Gather differences of slope between the before after entry in market approximate lines
+for(i in 1:length(records)) {
+  # structure the nr of reports by month
+  # TODO (check data type)
+  
+  
+  # drug.lm = lm(date ~ nrReports, data=rec) 
+  # coeffs = coefficients(drug.lm); coeffs[2]
+}
+
+
+##
+## Cleanup
+##
+dbDisconnect(medlineConn)
+dbDisconnect(adresConn)
+dbDisconnect(ndcConn)
