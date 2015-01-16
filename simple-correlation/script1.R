@@ -82,6 +82,12 @@ getDistinctNDCDrugs <- function() {
   return(res)
 }
 
+getDrugsByNonProprietaryName <- function(name) {
+  query <- paste(c('SELECT proprietary_name, non_proprietary_name, start_marketing_date FROM drug WHERE non_proprietary_name LIKE "%', name, '%"'), collapse="")
+  res <- query(ndcConn, query)
+  return(res)
+}
+
 ##
 ## Medline
 ##
@@ -153,20 +159,18 @@ getInterestingRecords <- function(terms) {
 ## Execution
 ##
 
-# 1. Retrieve drugs list from NDC
-
-drugs <- getDistinctNDCDrugs()
-print(nrow(drugs))
-records <- list()
-
-# 2. Query the medline for contents similar to the colected information
-
-for(i in 1:nrow(drugs)) {
+singleDrugRetrieve <- function(name) {
+  # 1. Retrieve drugs list from NDC
   
-  terms <- c(drugs[i,])
+  drugs <- getDrugsByNonProprietaryName('paroxetine')
+  records <- list()
+  
+  # 2. Query the medline for contents similar to the colected information
+  
+  terms <- c(drugs[1, 'non_proprietary_name'])
   
   # 2.1. Associate aditional info from ADReCS
-  res <- getDrugsByName(adresConn,drugs[i,])
+  res <- getDrugsByName(adresConn, drugs[1, 'non_proprietary_name'])
   
   #Create empty dataset so it can be used in rbind
   adrTerms <- data.frame(term=character())
@@ -186,28 +190,34 @@ for(i in 1:nrow(drugs)) {
     # save the collected info
     rec <- list(terms, info)
     records[[length(records) + 1]] <- rec
-    print(i)
     
-    return(0)
+    filename <- paste(c("record_", name, ".R"), collapse="")
+    save(records, file=filename)
+    print("Saved record to file ", filename)
   }
 }
 
-save(records, file="records.R")
-
-# 3. Gather differences of slope between the before after entry in market approximate lines
-for(i in 1:length(records)) {
-  # structure the nr of reports by month
-  # TODO (check data type)
+analyseData <- function(name) {
+  filename <- paste(c("record_", name, ".R"), collapse="")
   
-  
-  # drug.lm = lm(date ~ nrReports, data=rec) 
-  # coeffs = coefficients(drug.lm); coeffs[2]
+  # 3. Gather differences of slope between the before after entry in market approximate lines
+  for(i in 1:length(records)) {
+    # structure the nr of reports by month
+    # TODO (check data type)
+    
+    
+    # drug.lm = lm(date ~ nrReports, data=rec) 
+    # coeffs = coefficients(drug.lm); coeffs[2]
+  }
 }
+
 
 
 ##
 ## Cleanup
 ##
-dbDisconnect(medlineConn)
-dbDisconnect(adresConn)
-dbDisconnect(ndcConn)
+clean <- function() {
+  dbDisconnect(medlineConn)
+  dbDisconnect(adresConn)
+  dbDisconnect(ndcConn)
+}
