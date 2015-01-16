@@ -105,6 +105,9 @@ getSelectedRecordsInfo <- function(pmids) {
 
 getInterestingRecords <- function(terms) {
   terms_str <- paste0(terms, collapse="\" \"")
+
+  # Escape quotes
+  terms_str <- gsub("'", "''", terms_str)
   
   qs <- c("SELECT pmid
           FROM medline_citation
