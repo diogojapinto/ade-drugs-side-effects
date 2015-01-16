@@ -107,12 +107,13 @@ getInterestingRecords <- function(terms) {
   terms_str <- paste0(terms, collapse="\" \"")
   
   qs <- c("SELECT pmid
-            FROM medline_citation
+          FROM medline_citation
           WHERE MATCH(article_title, abstract_text)
           AGAINST ('\"",
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
+  
   res <- query(medlineConn, query)
   
   qs <- c("SELECT pmid
@@ -159,9 +160,9 @@ getInterestingRecords <- function(terms) {
 ## Execution
 ##
 
-# singleDrugRetrieve('paroxetine')
+# retrieveData('pravastatin')
 
-singleDrugRetrieve <- function(name) {
+retrieveData <- function(name) {
   # 1. Retrieve drugs list from NDC
   
   drugs <- getDrugsByNonProprietaryName(name)
@@ -169,10 +170,15 @@ singleDrugRetrieve <- function(name) {
   
   # 2. Query the medline for contents similar to the colected information
   
-  terms <- c(drugs[1, 'non_proprietary_name'])
+  terms <- c(name)
   
   # 2.1. Associate aditional info from ADReCS
-  res <- getDrugsByName(adresConn, drugs[1, 'non_proprietary_name'])
+  res <- getDrugsByName(adresConn, name)
+  
+  if(length(res) < 1) {
+    print("No records in ADReCS found")
+    return()
+  }
   
   #Create empty dataset so it can be used in rbind
   adrTerms <- data.frame(term=character())
@@ -196,6 +202,8 @@ singleDrugRetrieve <- function(name) {
     filename <- paste(c("record_", name, ".R"), collapse="")
     save(records, file=filename)
     print("Saved record to file ", filename)
+
+    return()
   }
 }
 
