@@ -201,8 +201,7 @@ retrieveData <- function(name) {
     info <- getSelectedRecordsInfo(pmids)
     
     # save the collected info
-    rec <- list(terms, info)
-    records[[length(records) + 1]] <- rec
+    records <- list(terms, info)
     
     filename <- paste(c("record_", name, ".R"), collapse="")
     save(records, file=filename)
