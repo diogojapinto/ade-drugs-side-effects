@@ -213,19 +213,18 @@ retrieveData <- function(name) {
 
 analyseData <- function(name) {
   filename <- paste(c("record_", name, ".R"), collapse="")
-  
-  # 3. Gather differences of slope between the before after entry in market approximate lines
-  for(i in 1:length(records)) {
-    # structure the nr of reports by month
-    # TODO (check data type)
-    
-    
-    # drug.lm = lm(date ~ nrReports, data=rec) 
-    # coeffs = coefficients(drug.lm); coeffs[2]
-  }
+  load(filename)
+
+  # Publications and date of publication
+  entries <- records[[1]][[2]]
+
+  dates <- as.Date(entries$date_created)
+  years <- format(dates, format="%Y")
+
+  # Number of publications by year
+  nPubYears <- table(years)
+  plot(nPubYears)
 }
-
-
 
 ##
 ## Cleanup
