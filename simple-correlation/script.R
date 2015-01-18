@@ -20,7 +20,9 @@ getConnection <- function(user='pcosta', password='pcosta', dbname, host='porto.
 ## Base function for querying the databases
 ##
 query <- function(con, query, n=-1){
-  res <- fetch(dbSendQuery(con,query),n=n)
+  rs <- dbSendQuery(con,query)
+  res <- fetch(rs,n=n)
+  dbClearResult(rs)
   return(res)
 }
 
