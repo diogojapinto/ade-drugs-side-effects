@@ -219,7 +219,7 @@ analyseData <- function(name) {
   entries <- records[[1]][[2]]
 
   dates <- as.Date(entries$date_created)
-  years <- format(dates, format="%Y")
+  years <- format(dates, format="%Y/%m")
 
   # Number of publications by year
   nPubYears <- table(years)
