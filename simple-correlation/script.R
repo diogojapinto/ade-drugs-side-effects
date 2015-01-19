@@ -216,7 +216,7 @@ analyseData <- function(name) {
   load(filename)
 
   # Publications and date of publication
-  entries <- records[[1]][[2]]
+  entries <- records[[2]]
 
   dates <- as.Date(entries$date_created)
   years <- format(dates, format="%Y/%m")
