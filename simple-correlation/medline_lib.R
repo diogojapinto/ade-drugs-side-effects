@@ -9,7 +9,7 @@ getSelectedRecordsInfo <- function(pmids) {
           paste0(pmids, collapse=","),
           ") ORDER BY date_created")
   query <- paste(qs, collapse="")
-  res <- query(medlineConn, query)
+  res <- query(medlineConn, query, n=1000000)
   return(res)
 }
 
@@ -19,6 +19,7 @@ getInterestingRecords <- function(terms) {
   # Escape quotes
   terms_str <- gsub("'", "''", terms_str)
   
+  print("1 query")
   qs <- c("SELECT pmid
           FROM medline_citation
           WHERE MATCH(article_title, abstract_text)
@@ -27,8 +28,10 @@ getInterestingRecords <- function(terms) {
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
   
-  res <- query(medlineConn, query)
+  res <- query(medlineConn, query, n=1000000)
+  print(length(res))
   
+  print("2 query")
   qs <- c("SELECT pmid
           FROM medline_keyword_list
           WHERE MATCH(keyword)
@@ -36,8 +39,10 @@ getInterestingRecords <- function(terms) {
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
-  res <- rbind(res, query(medlineConn, query))
+  res <- rbind(res, query(medlineConn, query, n=1000000))
+  print(length(res))
   
+  print("3 query")
   qs <- c("SELECT pmid
           FROM medline_mesh_heading
           WHERE MATCH(descriptor_name)
@@ -45,8 +50,10 @@ getInterestingRecords <- function(terms) {
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
-  res <- rbind(res, query(medlineConn, query))
+  res <- rbind(res, query(medlineConn, query, n=1000000))
+  print(length(res))
   
+  print("4 query")
   qs <- c("SELECT pmid
           FROM medline_mesh_heading_qualifier
           WHERE MATCH(descriptor_name)
@@ -54,8 +61,10 @@ getInterestingRecords <- function(terms) {
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
-  res <- rbind(res, query(medlineConn, query))
+  res <- rbind(res, query(medlineConn, query, n=1000000))
+  print(length(res))
   
+  print("5 query")
   qs <- c("SELECT pmid
           FROM medline_citation_other_abstract
           WHERE MATCH(abstract_text)
@@ -63,7 +72,7 @@ getInterestingRecords <- function(terms) {
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
-  res <- rbind(res, query(medlineConn, query))
-  
+  res <- rbind(res, query(medlineConn, query, n=1000000))
+  print(length(res))
   return(res)
 }

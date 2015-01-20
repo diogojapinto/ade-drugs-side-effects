@@ -21,7 +21,11 @@ getConnection <- function(user='pcosta', password='pcosta', dbname, host='porto.
 ##
 query <- function(con, query, n=-1){
   rs <- dbSendQuery(con,query)
-  res <- fetch(rs,n=n)
+  res <- dbFetch(rs,n=n)
+  
+  while(n != -1 && !dbHasCompleted(rs)){
+    res <- rbind(res, dbFetch(rs, n))
+  }
   dbClearResult(rs)
   return(res)
 }
