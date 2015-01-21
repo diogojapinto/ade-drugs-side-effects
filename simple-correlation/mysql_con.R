@@ -11,7 +11,7 @@ for(conn in dbListConnections(MySQL())) {
 ##
 ## Function to connect to databases
 ##
-getConnection <- function(user='pcosta', password='pcosta', dbname, host='porto.fe.up.pt'){
+getConnection <- function(user='pcosta', password='pcosta', dbname, host='localhost'){
   conn <- dbConnect(MySQL(), user=user, password=password, dbname=dbname, host=host)
   return(conn)
 }
@@ -22,9 +22,9 @@ getConnection <- function(user='pcosta', password='pcosta', dbname, host='porto.
 query <- function(con, query, n=-1){
   rs <- dbSendQuery(con,query)
   res <- dbFetch(rs,n=n)
-  
   while(n != -1 && !dbHasCompleted(rs)){
     res <- rbind(res, dbFetch(rs, n))
+    print(nrow(res))
   }
   dbClearResult(rs)
   return(res)
@@ -42,6 +42,4 @@ clean <- function() {
 ##
 ## Connections
 ##
-medlineConn <- getConnection(dbname='medline');
-adresConn <- getConnection(dbname='ADReCS');
-ndcConn <- getConnection(dbname='ndc_db');
+adresConn <- getConnection(dbname='ADReCS')

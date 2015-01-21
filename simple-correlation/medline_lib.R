@@ -3,17 +3,20 @@
 ##
 
 getSelectedRecordsInfo <- function(pmids) {
+  medlineConn <- getConnection(dbname='medline')
   qs <- c("SELECT pmid, date_created 
           FROM medline_citation 
           WHERE pmid IN (",
           paste0(pmids, collapse=","),
           ") ORDER BY date_created")
   query <- paste(qs, collapse="")
-  res <- query(medlineConn, query, n=1000000)
+  res <- query(medlineConn, query, n=1000)
+  dbDisconnect(medlineConn)
   return(res)
 }
 
 getInterestingRecords <- function(terms) {
+  medlineConn <- getConnection(dbname='medline')
   terms_str <- paste0(terms, collapse="\" \"")
   
   # Escape quotes
@@ -28,8 +31,8 @@ getInterestingRecords <- function(terms) {
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
   
-  res <- query(medlineConn, query, n=1000000)
-  print(length(res))
+  res <- query(medlineConn, query, n=1000)
+  print(nrow(res))
   
   print("2 query")
   qs <- c("SELECT pmid
@@ -39,8 +42,8 @@ getInterestingRecords <- function(terms) {
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
-  res <- rbind(res, query(medlineConn, query, n=1000000))
-  print(length(res))
+  res <- rbind(res, query(medlineConn, query, n=1000))
+  print(nrow(res))
   
   print("3 query")
   qs <- c("SELECT pmid
@@ -50,8 +53,8 @@ getInterestingRecords <- function(terms) {
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
-  res <- rbind(res, query(medlineConn, query, n=1000000))
-  print(length(res))
+  res <- rbind(res, query(medlineConn, query, n=1000))
+  print(nrow(res))
   
   print("4 query")
   qs <- c("SELECT pmid
@@ -61,8 +64,8 @@ getInterestingRecords <- function(terms) {
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
-  res <- rbind(res, query(medlineConn, query, n=1000000))
-  print(length(res))
+  res <- rbind(res, query(medlineConn, query, n=1000))
+  print(nrow(res))
   
   print("5 query")
   qs <- c("SELECT pmid
@@ -72,7 +75,9 @@ getInterestingRecords <- function(terms) {
           terms_str,
           "\"' IN BOOLEAN MODE)")
   query <- paste(qs, collapse="")
-  res <- rbind(res, query(medlineConn, query, n=1000000))
-  print(length(res))
+  res <- rbind(res, query(medlineConn, query, n=1000))
+  print(nrow(res))
+  
+  dbDisconnect(medlineConn)
   return(res)
 }
