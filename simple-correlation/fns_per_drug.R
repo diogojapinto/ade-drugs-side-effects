@@ -54,5 +54,7 @@ analyseData <- function(name) {
   
   # Number of publications by year
   nPubYears <- table(years)
-  plot(nPubYears)
+  
+  x <- names(nPubYears)
+  y <- as.vector(nPubYears)
 }
