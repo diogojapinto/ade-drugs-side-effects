@@ -9,7 +9,7 @@ retrieveData <- function(name, full=TRUE) {
   terms <- c(name)
   
   # 2.1. Associate aditional info from ADReCS
-  res <- getDrugsByName(adresConn, name)
+  res <- getDrugsByName(name)
   
   if(nrow(res) < 1) {
     print("No records in ADReCS found")
@@ -20,7 +20,7 @@ retrieveData <- function(name, full=TRUE) {
   adrTerms <- data.frame(term=character())
   for(j in 1:nrow(res)) {
     #For each drug, get its known adrs
-    drugAdrs <- getDrugsAdrs(adresConn, res[j,], full)
+    drugAdrs <- getDrugsAdrs(res[j,], full)
     adrTerms <- rbind(adrTerms, drugAdrs)
   }
   
@@ -32,6 +32,9 @@ retrieveData <- function(name, full=TRUE) {
     #2.2 Query medline with terms    
     print("Before")
     print(paste(collapse="", "Get PMIDS: ", system.time(pmids <- getInterestingRecords(terms))))
+    filename <- paste(c("pmid_", name, ".R"), collapse="")
+    save(pmids, file=filename)
+    print("Saved record to file ", filename)
     print("Middle")
     print(paste(collapse="", "Get Dates: ", system.time(info <- getSelectedRecordsInfo(pmids))))
     print("After")
@@ -60,7 +63,13 @@ analyseData <- function(name, graphics=FALSE) {
   # Number of publications by year
   nPubYears <- table(years)
   
+  # Release Dates
+  drugs <- getDrugsByNonProprietaryName(name)
+  releaseDates <- format(as.Date(drugs$start_marketing_date), format="%Y/%m")
+  
+  
   if(graphics) {
     plot(nPubYears)
+    abline(v=releaseDates)
   }
 }
