@@ -64,6 +64,6 @@ analyseData <- function(name, graphics=FALSE) {
   y <- as.vector(nPubYears)
 
   if(graphics) {
-    plot(nPubYears)
+    plot(x,y)
   }
 }
