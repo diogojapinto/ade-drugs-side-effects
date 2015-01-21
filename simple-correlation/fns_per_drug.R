@@ -63,13 +63,16 @@ analyseData <- function(name, graphics=FALSE) {
   # Number of publications by year
   nPubYears <- table(years)
   
+  x <- names(nPubYears)
+  y <- as.vector(nPubYears)
+  
   # Release Dates
   drugs <- getDrugsByNonProprietaryName(name)
   releaseDates <- format(as.Date(drugs$start_marketing_date), format="%Y/%m")
   
   
   if(graphics) {
-    plot(nPubYears)
+    plot(x,y)
     abline(v=releaseDates)
   }
 }
