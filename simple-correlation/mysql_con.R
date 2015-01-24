@@ -24,7 +24,6 @@ query <- function(con, query, n=-1){
   res <- dbFetch(rs,n=n)
   while(n != -1 && !dbHasCompleted(rs)){
     res <- rbind(res, dbFetch(rs, n))
-    print(nrow(res))
   }
   dbClearResult(rs)
   return(res)

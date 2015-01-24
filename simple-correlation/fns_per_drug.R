@@ -30,21 +30,20 @@ retrieveData <- function(name, full=TRUE) {
     terms <- adrTerms[,1]
     
     #2.2 Query medline with terms    
-    print("Before")
-    print(paste(collapse="", "Get PMIDS: ", system.time(pmids <- getInterestingRecords(terms))))
+    pmids <- getInterestingRecords(terms)
     filename <- paste(c("pmid_", name, ".R"), collapse="")
     save(pmids, file=filename)
-    print("Saved record to file ", filename)
-    print("Middle")
-    print(paste(collapse="", "Get Dates: ", system.time(info <- getSelectedRecordsInfo(pmids))))
-    print("After")
+    print(paste(collapse="", c("Saved pmids to file ", filename)))
+    
+    uniquePMIDs <- unique(pmids)
+    info <- getSelectedRecordsInfo(uniquePMIDs)
     
     # save the collected info
     records <- list(terms, info)
     
     filename <- paste(c("record_", name, ".R"), collapse="")
     save(records, file=filename)
-    print("Saved record to file ", filename)
+    print(paste(collapse="", c("Saved record to file ", filename)))
     
     return()
   }
@@ -58,18 +57,18 @@ analyseData <- function(name, graphics=FALSE) {
   entries <- records[[2]]
   
   dates <- as.Date(entries$date_created)
-  years <- format(dates, format="%Y/%m")
+  years <- format(dates, format="%Y-%m")
   
   # Number of publications by year
   nPubYears <- table(years)
   
-  x <- names(nPubYears)
+  tmp <- sapply(names(nPubYears), function(x) {paste(c(x, "-01"), collapse="")})
+  x <- as.Date(tmp, "%Y-%m-%d")
   y <- as.vector(nPubYears)
   
   # Release Dates
   drugs <- getDrugsByNonProprietaryName(name)
   releaseDates <- format(as.Date(drugs$start_marketing_date), format="%Y/%m")
-  
   
   if(graphics) {
     plot(x,y)
