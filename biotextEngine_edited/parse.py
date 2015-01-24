@@ -5,7 +5,7 @@ def main():
   root = '/mnt/data01/Data/medline2015/'
 
   # remove the first 370 files
-  sorted_files = sorted(os.listdir(root))[768:]
+  sorted_files = sorted(os.listdir(root))
 
   for file in sorted_files:
     if file.endswith('.xml'):
