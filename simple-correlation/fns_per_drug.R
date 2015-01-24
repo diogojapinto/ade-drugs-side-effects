@@ -77,6 +77,13 @@ analyseData <- function(name, graphics=FALSE) {
   tmp <- sapply(names(nPubYears), function(x) {paste(c(x, "-01"), collapse="")})
   x <- as.Date(tmp, "%Y-%m-%d")
   y <- as.vector(nPubYears)
+
+  # Transforms string in integer
+  # Must become date to be equally spaced
+  yInt <- strtoi(gsub("/","",y))
+
+  # Performs linear regression
+  lm.out = lm(x~yInt)
   
   # Release Dates
   drugs <- getDrugsByNonProprietaryName(name)
@@ -84,6 +91,12 @@ analyseData <- function(name, graphics=FALSE) {
   
   if(graphics) {
     plot(x,y)
+    abline(lm.out, col="red")
     abline(v=releaseDates)
   }
+}
+
+drugHistogram <- function(n=10){
+
+
 }
