@@ -63,7 +63,20 @@ analyseData <- function(name, graphics=FALSE) {
   x <- names(nPubYears)
   y <- as.vector(nPubYears)
 
+  # Transforms string in integer
+  # Must become date to be equally spaced
+  yInt <- strtoi(gsub("/","",y))
+
+  # Performs linear regression
+  lm.out = lm(x~yInt)
+
   if(graphics) {
-    plot(x,y)
+    plot(x,yInt)
+    abline(lm.out, col="red")
   }
+}
+
+drugHistogram <- function(n=10){
+
+
 }
