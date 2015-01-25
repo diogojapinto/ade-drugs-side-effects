@@ -78,21 +78,18 @@ analyseData <- function(name, graphics=FALSE) {
   x <- as.Date(tmp, "%Y-%m-%d")
   y <- as.vector(nPubYears)
 
-  # Transforms string in integer
-  # Must become date to be equally spaced
-  yInt <- strtoi(gsub("/","",y))
-
   # Performs linear regression
-  lm.out = lm(x~yInt)
+  lm.out = lm(y~x)
   
   # Release Dates
   drugs <- getDrugsByNonProprietaryName(name)
-  releaseDates <- format(as.Date(drugs$start_marketing_date), format="%Y/%m")
-  
+  releaseDates <- format(as.Date(drugs$start_marketing_date), format="%Y-%m")
+  releaseDates <- as.Date(sapply(releaseDates, function(x) {paste(c(x, "-01"), collapse="")}), "%Y-%m-%d")
+
   if(graphics) {
     plot(x,y)
     abline(lm.out, col="red")
-    abline(v=releaseDates)
+    abline(v=releaseDates, col="green")
   }
 }
 
