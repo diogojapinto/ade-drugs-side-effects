@@ -11,12 +11,16 @@ getDrugSynonyms <- function(drugId){
   return(syns)
 }
 
-getDrugs <- function(drug=""){
+getDrugs <- function(drug="", n=-1, skip=0){
   adresConn <- getConnection(dbname='ADReCS')
   if(drug=="")
     qs <- c("SELECT * FROM drug")
   else
     qs <- c('SELECT * FROM drug WHERE id = "', drug, '"')
+
+  if(n>0)
+    qs<-c(qs,' LIMIT ', skip, ', ', n)
+
   query <- paste(qs,collapse="")
   drugs <- query(adresConn,query)
   dbDisconnect(adresConn)

@@ -84,7 +84,31 @@ analyseData <- function(name, graphics=FALSE) {
   }
 }
 
-drugHistogram <- function(n=10){
+drugHistogram <- function(n=10, full=TRUE){
 
+  filename <- "drug_histogram.R"
 
+  histogram <- data.frame(Drug=character(), Num=c())
+  if( file.exists(filename))
+    load(filename)
+
+  # 1. Fetch n drugs from ADRECS
+  drugs <- getDrugs(n=n, skip=nrow(histogram))
+
+  # 2. For each drug d
+  for(i in 1:nrow(drugs)){
+    # 2.1 Get know adrs from d and add to list
+    drugAdrs <- getDrugsAdrs(drugs[i,]$id, full)
+    terms <- c(drugs[i,]$name,drugAdrs$term)
+
+    # 2.2 Query medline for pmids and add to histogram
+    pmids <- getInterestingRecords(terms)
+
+    histogram <- rbind(histogram, data.frame(Drug=drugs[i,]$name, Num=nrow(unique(pmids)))
+    save(histogram, file=filename)
+    print(paste("Saved drug", drugs[i,]$name))
+  }
+
+  # 3. Plot histogram
+  plot(histogram)
 }
