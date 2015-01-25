@@ -77,18 +77,22 @@ analyseData <- function(name, graphics=FALSE) {
   tmp <- sapply(names(nPubYears), function(x) {paste(c(x, "-01"), collapse="")})
   x <- as.Date(tmp, "%Y-%m-%d")
   y <- as.vector(nPubYears)
-
-  # Performs linear regression
-  lm.out = lm(y~x)
   
   # Release Dates
   drugs <- getDrugsByNonProprietaryName(name)
   releaseDates <- format(as.Date(drugs$start_marketing_date), format="%Y-%m")
   releaseDates <- as.Date(sapply(releaseDates, function(x) {paste(c(x, "-01"), collapse="")}), "%Y-%m-%d")
 
+  beforeIdx = which(x < min(releaseDates))
+
+  # Performs linear regression
+  lm.before = lm(y[beforeIdx]~x[beforeIdx])
+  lm.after = lm(y[-beforeIdx]~x[-beforeIdx])
+
   if(graphics) {
     plot(x,y)
-    abline(lm.out, col="red")
+    abline(lm.before, col="red")
+    abline(lm.after, col="blue")
     abline(v=releaseDates, col="green")
   }
 }
