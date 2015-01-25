@@ -116,7 +116,7 @@ drugHistogram <- function(n=10, full=TRUE){
     # 2.2 Query medline for pmids and add to histogram
     pmids <- getInterestingRecords(terms)
 
-    histogram <- rbind(histogram, data.frame(Drug=drugs[i,]$name, Num=nrow(unique(pmids)))
+    histogram <- rbind(histogram, data.frame(Drug=drugs[i,]$name, Num=nrow(unique(pmids))))
     save(histogram, file=filename)
     print(paste("Saved drug", drugs[i,]$name))
   }
