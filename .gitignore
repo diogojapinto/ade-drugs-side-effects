@@ -4,3 +4,5 @@ biotextEngine_edited/sftp-config.json
 simple-correlation/sftp-config.json
 .Rproj.user
 *Rproj
+simple-correlation/pmid_*.R
+simple-correlation/record_*.R

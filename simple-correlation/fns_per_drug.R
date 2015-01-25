@@ -36,7 +36,19 @@ retrieveData <- function(name, full=TRUE) {
     print(paste(collapse="", c("Saved pmids to file ", filename)))
     
     uniquePMIDs <- unique(pmids)
-    info <- getSelectedRecordsInfo(uniquePMIDs)
+    nrIters <- ceiling(nrow(uniquePMIDs) / 1000000)
+    info <- data.frame()
+    
+    for(i in 1:nrIters) {
+      b <- (i - 1) * 1000000
+      e <- min(i * 1000000 - 1, nrow(uniquePMIDs))
+      
+      if (nrow(info) == 0) {
+        info <- getSelectedRecordsInfo(uniquePMIDs[b:e,])
+      } else {
+        info <- rbind(info, getSelectedRecordsInfo(uniquePMIDs[b:e,]))
+      }
+    }
     
     # save the collected info
     records <- list(terms, info)
