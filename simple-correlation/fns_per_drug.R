@@ -24,14 +24,12 @@ retrieveData <- function(name, full=TRUE) {
     adrTerms <- rbind(adrTerms, drugAdrs)
   }
   
-  print(paste(c("Number of terms: ", nrow(adrTerms)), collapse=""))
-  
   if(nrow(adrTerms) > 0){
     terms <- adrTerms[,1]
     
     #2.2 Query medline with terms    
     pmids <- getInterestingRecords(terms)
-    filename <- paste(c("pmid_", name, ".R"), collapse="")
+    filename <- paste(c("pmids/pmid_", name, ".R"), collapse="")
     save(pmids, file=filename)
     print(paste(collapse="", c("Saved pmids to file ", filename)))
     
@@ -53,7 +51,7 @@ retrieveData <- function(name, full=TRUE) {
     # save the collected info
     records <- list(terms, info)
     
-    filename <- paste(c("record_", name, ".R"), collapse="")
+    filename <- paste(c("records/record_", name, ".R"), collapse="")
     save(records, file=filename)
     print(paste(collapse="", c("Saved record to file ", filename)))
     
@@ -61,14 +59,23 @@ retrieveData <- function(name, full=TRUE) {
   }
 }
 
-analyseData <- function(name, graphics=FALSE) {
-  filename <- paste(c("record_", name, ".R"), collapse="")
+analyseData <- function(name) {
+  filename <- paste(c("records/record_", name, ".R"), collapse="")
   load(filename)
   
   # Publications and date of publication
   entries <- records[[2]]
   
+  if(sum(!is.na(entries)) == 0) {
+    print("No records found")
+    return(NULL)
+  }
+  
   dates <- as.Date(entries$date_created)
+  
+  # Limit dates to 1990-2013
+  valid.dates <- dates >= as.Date("1990-01-01") & dates <= as.Date("2013-12-31")
+  dates <- dates[valid.dates]
   years <- format(dates, format="%Y-%m")
   
   # Number of publications by year
@@ -84,17 +91,26 @@ analyseData <- function(name, graphics=FALSE) {
   releaseDates <- as.Date(sapply(releaseDates, function(x) {paste(c(x, "-01"), collapse="")}), "%Y-%m-%d")
 
   beforeIdx = which(x < min(releaseDates))
+  
+  if(length(beforeIdx) == 0 || length(beforeIdx) == length(x)) {
+    print("Not enough data to compare")
+    return(NULL)
+  }
 
   # Performs linear regression
   lm.before = lm(y[beforeIdx]~x[beforeIdx])
   lm.after = lm(y[-beforeIdx]~x[-beforeIdx])
-
-  if(graphics) {
-    plot(x,y)
-    abline(lm.before, col="red")
-    abline(lm.after, col="blue")
-    abline(v=releaseDates, col="green")
-  }
+  
+  # Save plot to file
+  plotFileName <- paste("plots/plot_", name, ".jpg", sep="")
+  jpeg(file=plotFileName)
+  plot(x,y)
+  abline(lm.before, col="red")
+  abline(lm.after, col="blue")
+  abline(v=releaseDates, col="green")
+  print(paste("Saved plot to", plotFileName, sep=" "))
+  dev.off()
+  return(c(coef(lm.before)[2], coef(lm.after)[2]))
 }
 
 drugHistogram <- function(n=10, full=TRUE){

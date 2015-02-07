@@ -6,3 +6,7 @@ simple-correlation/sftp-config.json
 *Rproj
 simple-correlation/pmid_*.R
 simple-correlation/record_*.R
+simple-correlation/pmids/
+simple-correlation/records
+simple-correlation/test
+simple-correlation/plots
