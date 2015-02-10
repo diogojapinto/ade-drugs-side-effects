@@ -15,6 +15,10 @@ getSelectedRecordsInfo <- function(pmids) {
   return(res)
 }
 
+getAllRecordsInfo <- function() {
+  
+}
+
 getInterestingRecords <- function(terms) {
   medlineConn <- getConnection(dbname='medline')
   terms_str <- paste0(terms, collapse="\" \"")
