@@ -70,13 +70,25 @@ analyseData <- function(name, graphics=FALSE) {
   
   dates <- as.Date(entries$date_created)
   years <- format(dates, format="%Y-%m")
-  
+
+  # Aggregates occurences by trimester
+  trimester <- sapply(years, function(x)
+    {
+      m <- substr(x,6,7)
+      y <- substr(x,1,5)
+      m <- ((strtoi(m)-1) %/% 3) * 3 + 1
+      paste(c(y,m), collapse="")
+    })
+
+  # Number of publications by trimester
+  nPubTrimester <- table(trimester)
+
   # Number of publications by year
-  nPubYears <- table(years)
+  #nPubYears <- table(years)
   
-  tmp <- sapply(names(nPubYears), function(x) {paste(c(x, "-01"), collapse="")})
+  tmp <- sapply(names(nPubTrimester), function(x) {paste(c(x, "-01"), collapse="")})
   x <- as.Date(tmp, "%Y-%m-%d")
-  y <- as.vector(nPubYears)
+  y <- as.vector(nPubTrimester)
   
   # Release Dates
   drugs <- getDrugsByNonProprietaryName(name)
