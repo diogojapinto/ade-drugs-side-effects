@@ -59,7 +59,6 @@ getInterestingRecords <- function(terms) {
   query <- paste(qs, collapse="")
   res <- rbind(res, query(medlineConn, query, n=1000))
   
-  print("5 query")
   qs <- c("SELECT pmid
           FROM medline_citation_other_abstract
           WHERE MATCH(abstract_text)
