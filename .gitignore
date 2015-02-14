@@ -10,3 +10,4 @@ simple-correlation/test
 simple-correlation/plots
 drugs_graph/*.txt
 *__pycache__
+*.Rhistory
