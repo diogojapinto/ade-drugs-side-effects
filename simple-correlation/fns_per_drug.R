@@ -1,4 +1,4 @@
-# retrieveData <- function(name, full=TRUE) {
+retrieveData <- function(name, full=TRUE) {
   # 1. Retrieve drugs list from NDC
   
   drugs <- getDrugsByNonProprietaryName(name)
