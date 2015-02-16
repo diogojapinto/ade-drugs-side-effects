@@ -21,6 +21,10 @@ getAllRecordsInfo <- function() {
 
 getInterestingRecords <- function(terms) {
   medlineConn <- getConnection(dbname='medline')
+
+  #Add a minus before the drug name to exclude it from the search results
+  #Removes the papers written in the research of the drug
+  terms[1] <- paste0('-', terms[1], collapse="")
   terms_str <- paste0(terms, collapse="\" \"")
   
   # Escape quotes
