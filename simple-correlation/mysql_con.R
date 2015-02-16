@@ -28,17 +28,3 @@ query <- function(con, query, n=-1){
   dbClearResult(rs)
   return(res)
 }
-
-##
-## Cleanup
-##
-clean <- function() {
-  dbDisconnect(medlineConn)
-  dbDisconnect(adresConn)
-  dbDisconnect(ndcConn)
-}
-
-##
-## Connections
-##
-adresConn <- getConnection(dbname='ADReCS')

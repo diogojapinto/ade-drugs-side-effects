@@ -83,10 +83,7 @@ analyseData <- function(name) {
     {
       m <- substr(x,6,7)
       y <- substr(x,1,5)
-      tmp <- ((strtoi(m, base=10)-1) %/% 3) * 3 + 1
-      if (is.na(tmp)) {
-        print(m)
-      }
+      m <- ((strtoi(m, base=10) - 1) %/% 3) * 3 + 1
       paste(c(y,m), collapse="")
     })
 

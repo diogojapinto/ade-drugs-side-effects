@@ -75,3 +75,13 @@ getInterestingRecords <- function(terms) {
   dbDisconnect(medlineConn)
   return(res)
 }
+
+getAllReleaseDates <- function() {
+  medlineConn <- getConnection(dbname='medline')
+  query <- c("SELECT date_created, COUNT(*) AS count
+          FROM medline_citation 
+          GROUP BY date_created")
+  res <- query(medlineConn, query, n=1000)
+  dbDisconnect(medlineConn)
+  return(res)
+}

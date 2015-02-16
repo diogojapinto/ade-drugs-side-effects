@@ -15,5 +15,6 @@ source("ndc_lib.R")
 source("medline_lib.R")
 source("fns_per_drug.R")
 source("fns_global.R")
+source("cleaner.R")
 
 # retrieveData('pravastatin')
