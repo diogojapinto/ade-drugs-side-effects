@@ -63,6 +63,9 @@ analyseData <- function(name) {
   filename <- paste(c("records/record_", name, ".R"), collapse="")
   load(filename)
   
+  pmidsFilename <- paste(c("pmids/pmid_", name, ".R"), collapse="")
+  load(pmidsFilename)
+
   # Publications and date of publication
   entries <- records[[2]]
   
@@ -70,6 +73,9 @@ analyseData <- function(name) {
     print("No records found")
     return(NULL)
   }
+
+  # Relevance (number of occurences) of each pmid related to the drug
+  pmidsRelevance <- table(pmids)
   
   dates <- as.Date(entries$date_created)
   
@@ -96,6 +102,40 @@ analyseData <- function(name) {
   tmp <- sapply(names(nPubTrimester), function(x) {paste(c(x, "-01"), collapse="")})
   x <- as.Date(tmp, "%Y-%m-%d")
   y <- as.vector(nPubTrimester)
+
+  pmidsByTrimester <- list()
+  # Run through all dates
+  for(i in 1:nrow(entries[valid.dates,])){
+    # Convert date to trimester
+    d <- years[i]
+    m <- substr(d,6,7)
+    y <- substr(d,1,5)
+    m <- ((strtoi(m, base=10) - 1) %/% 3) * 3 + 1
+    tri <- paste(c(y,m), collapse="")
+
+    # Add pmid to map with trimester  
+    pmidsByTrimester[[tri]] <- c(pmidsByTrimester[[tri]], entries[i,]$pmid)
+  }
+  
+
+  weight <- sapply(x, function(x)
+    {
+      # 1. Get the trimester
+      d <- as.Date(x, "%Y-%m")
+
+      # 2. Get pmids that were published in that trimester
+      #interestingPmids <- entries[which(entries$date_created >= x & entries$date_created < d),]$pmid
+      interestingPmids <- pmidsByTrimester[[d]]
+
+      # 3. Search relevance of the pmids
+      relevance <- pmidsRelevance[which(names(pmidsRelevance) %in% interestingPmids)]
+
+      # 4. Sum and return
+      sum(as.vector(relevance))
+    })
+
+  # Normalize the weight vector and shift it to the right
+  weight <- (weight - min(weight)) / (max(weight) - min(weight)) + 0.5
   
   # Release Dates
   drugs <- getDrugsByNonProprietaryName(name)
@@ -116,7 +156,7 @@ analyseData <- function(name) {
   # Save plot to file
   plotFileName <- paste("plots/plot_", name, ".jpg", sep="")
   jpeg(file=plotFileName)
-  plot(x,y)
+  plot(x,y, cex=weight)
   abline(lm.before, col="red")
   abline(lm.after, col="blue")
   abline(v=releaseDates, col="green")
