@@ -123,7 +123,12 @@ analyseData <- function(name, relevance=FALSE) {
     weight <- sapply(x, function(x)
       {
         # 1. Get the trimester
-        d <- as.Date(x, "%Y-%m")
+        d <- as.Date(x)
+        d <- format(d, format="%Y-%m")
+
+        if(substr(d,6,6) == "0"){
+          d <- paste(c(substr(d,1,5), substr(d,7,7)), collapse="")
+        }
 
         # 2. Get pmids that were published in that trimester
         #interestingPmids <- entries[which(entries$date_created >= x & entries$date_created < d),]$pmid
@@ -136,8 +141,8 @@ analyseData <- function(name, relevance=FALSE) {
         sum(as.vector(relevance))
       })
 
-    # Normalize the weight vector and shift it to the right
-    weight <- (weight - min(weight)) / (max(weight) - min(weight)) + 0.5
+    # Normalize the weight vector, scales and shifts it to the right
+    weight <- ((weight - min(weight)) / (max(weight) - min(weight))) * 1.5 + 0.5
   }
   else{
     weight <- numeric(length(x)) + 1
