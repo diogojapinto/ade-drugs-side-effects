@@ -2,29 +2,40 @@
     Library for building graphs using NetworkX
 """
 
-import networkx as nx
+# import networkx as nx
+import numpy as np
 
-def build_drug_to_drug(cursor):
-    """Build a NetworkX Graph in a drug-to-drug manner"""
+def build_drugs_dict(drugs):
+    """ Builds a dictionary that maps drug ids to indexes of the graph's matrix"""
+    return {id: index for (index, id) in enumerate(drugs)}
+    
 
-    graph = nx.MultiGraph()
+def build_graph(cursor, drugs_dict):
+    """Build an adjancency matrix in a drug-to-drug manner"""
 
-    f = open('edges.txt', 'w')
-    current_adr = ""
-    current_drugs = []
-    for (drug1, adr) in cursor:
+    # initialize the dictionary and matrix
+    nr_drugs = len(drugs_dict)
+    graph = np.zeros(shape=(nr_drugs, nr_drugs))
 
-        if adr != current_adr:
-            current_drugs = []
-            current_adr = adr
+    current_edge = ""
+    current_vertexes = []
+    for (vertex1, edge) in cursor:
 
-        for drug2 in current_drugs:
-            # graph.add_edge(drug1, drug2, label=adr)
-            f.write(drug1 + '\t' + drug2 + '\t' + adr + '\n')
+        if edge != current_edge:
+            current_vertexes = []
+            current_edge = edge
 
-        current_drugs.append(drug1)
+        for vertex2 in current_vertexes:
+            index1 = drugs_dict[vertex1]
+            index2 = drugs_dict[vertex2]
 
-    f.close()
+            # update the values on the matrix, already envisioning Spectral Clustering
+            graph[index1][index2] -= 1
+            graph[index2][index1] -= 1
+            graph[index1][index1] += 1
+            graph[index2][index2] += 1
+
+        current_vertexes.append(vertex1)
+
 
     return graph
-

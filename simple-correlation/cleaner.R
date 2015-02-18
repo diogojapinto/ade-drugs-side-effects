@@ -10,10 +10,12 @@ getPopularPMIDs <- function(threshold) {
   
   if (file.exists("helpers/popular_pmids.R")) {
     load("helpers/popular_pmids.R")
+  } else {
+    pmids <- loadPMIDsCount()
   }
   
-  
-  
+  selection <- pmids >= threshold
+  return(pmids[selection])
 }
 
 loadPMIDsCount <- function() {
@@ -43,5 +45,7 @@ loadPMIDsCount <- function() {
   pmids <- aggregate(count ~ pmids, FUN="sum", data=pmids)
   
   filename <- "helpers/popular_pmids.R"
-  save(pmids, file="file")
+  save(pmids, file=filename)
+  
+  return(pmids)
 }

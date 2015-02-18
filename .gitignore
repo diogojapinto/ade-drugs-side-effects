@@ -11,3 +11,5 @@ simple-correlation/plots
 drugs_graph/*.txt
 *__pycache__
 *.Rhistory
+simple-correlation/helpers/popular_pmids.R
+
