@@ -1,0 +1,6 @@
+number of publications			?
+drugs of fda and adrecs in common	?
+number of publications in 1960		?
+number of publications in 1980		?
+number of publications in 1990		?
+slope of the line between 1990-present	?
