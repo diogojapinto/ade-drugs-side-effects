@@ -16,5 +16,25 @@ Steps:  1. Pre-process
             assign points to two or more clusters, based on the new representation (use k-means)
 """
 
-def get_clusters():
-    pass
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+
+def get_clusters(graph, nr_clusters):
+    """ Retrieves the clusters achieved by multi-level Spectral Clustering """
+    _, eigenvectors = np.linalg.eig(graph)
+
+    # plt.plot(sorted(eigenvectors[1, :]))
+    # plt.show()
+
+    k_means = KMeans(n_clusters=nr_clusters)
+    k_means.fit(eigenvectors)
+    y_pred = k_means.predict(eigenvectors)
+
+
+    #plt.scatter(range(len(eigenvectors[1, :])), eigenvectors[1, :], c=y_pred)
+    #plt.show()
+
+    return y_pred
+

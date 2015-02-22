@@ -7,7 +7,7 @@ import numpy as np
 
 def build_drugs_dict(drugs):
     """ Builds a dictionary that maps drug ids to indexes of the graph's matrix"""
-    return {id: index for (index, id) in enumerate(drugs)}
+    return {ident[0]: index for (index, ident) in enumerate(drugs)}
     
 
 def build_graph(cursor, drugs_dict):
@@ -19,6 +19,8 @@ def build_graph(cursor, drugs_dict):
 
     current_edge = ""
     current_vertexes = []
+
+    cursor = cursor.fetchall()
     for (vertex1, edge) in cursor:
 
         if edge != current_edge:
@@ -30,10 +32,16 @@ def build_graph(cursor, drugs_dict):
             index2 = drugs_dict[vertex2]
 
             # update the values on the matrix, already envisioning Spectral Clustering
-            graph[index1][index2] -= 1
-            graph[index2][index1] -= 1
-            graph[index1][index1] += 1
-            graph[index2][index2] += 1
+            # graph[index1][index2] -= 1
+            # graph[index2][index1] -= 1
+            # graph[index1][index1] += 1
+            # graph[index2][index2] += 1
+
+            if graph[index1][index2] != 1:
+                graph[index1][index2] = 1
+                graph[index2][index1] = 1
+                graph[index1][index1] += 1
+                graph[index2][index2] += 1
 
         current_vertexes.append(vertex1)
 
