@@ -14,10 +14,13 @@ getPopularPMIDs <- function(threshold) {
     pmids <- loadPMIDsCount()
   }
   
-  selection <- pmids >= threshold
-  return(pmids[selection])
+  selection <- pmids$count >= threshold
+  return(pmids[selection,])
 }
 
+##
+## For each pmid, retrieves the number of documents it appears in
+##
 loadPMIDsCount <- function() {
   
   # make cluster

@@ -59,7 +59,87 @@ retrieveData <- function(name, full=TRUE) {
   }
 }
 
-analyseData <- function(name, relevance=FALSE) {
+globalCountPmids <- function(name) {
+  filename <- paste(c("pmids/pmid_", name, ".R"), collapse="")
+  load(filename)
+
+  # Number of references to a pmid on the given drug
+  drugWeight <- table(pmids)
+  drugWeightDf <- data.frame(pmids=names(drugWeight), n=as.vector(drugWeight))
+
+  # Get count of global pmids
+  popular <- getPopularPMIDs(0)
+
+  # Merge drugWeight with popular Pmids to have a data frame with
+  # (pmid, N, n) with N being the total count of the pmid
+  # and n the count refering to this drug only
+  countsByPmids <- merge(drugWeightDf, popular, by="pmids")
+
+  return(countsByPmids)
+}
+
+cleanPmidsByWeight <- function(name, entries, threshold){
+
+  countsByPmids <- globalCountPmids(name)
+
+  colnames(countsByPmids)[1] <- "pmid"
+
+  reducedEntries <- merge(entries, countsByPmids, by="pmid")
+
+  # Select only entries that have a percentage of pmids bigger than a threshold
+  selected <- reducedEntries$n / reducedEntries$count > threshold
+
+  return(reducedEntries[selected,])
+}
+
+weightPmids <- function(name, entries, valid.dates, years, x){
+  pmidsFilename <- paste(c("pmids/pmid_", name, ".R"), collapse="")
+  load(pmidsFilename)
+
+  pmidsByTrimester <- list()
+  # Run through all dates
+  for(i in 1:nrow(entries[valid.dates,])){
+    # Convert date to trimester
+    d <- years[i]
+    m <- substr(d,6,7)
+    y <- substr(d,1,5)
+    m <- ((strtoi(m, base=10) - 1) %/% 3) * 3 + 1
+    tri <- paste(c(y,m), collapse="")
+
+    # Add pmid to map with trimester  
+    pmidsByTrimester[[tri]] <- c(pmidsByTrimester[[tri]], entries[i,]$pmid)
+  }
+    
+  # Relevance (number of occurences) of each pmid related to the drug
+  pmidsRelevance <- table(pmids)
+
+  weight <- sapply(x, function(x)
+    {
+      # 1. Get the trimester
+      d <- as.Date(x)
+      d <- format(d, format="%Y-%m")
+
+      if(substr(d,6,6) == "0"){
+        d <- paste(c(substr(d,1,5), substr(d,7,7)), collapse="")
+      }
+
+      # 2. Get pmids that were published in that trimester
+      #interestingPmids <- entries[which(entries$date_created >= x & entries$date_created < d),]$pmid
+      interestingPmids <- pmidsByTrimester[[d]]
+
+      # 3. Search relevance of the pmids
+      relevance <- pmidsRelevance[which(names(pmidsRelevance) %in% interestingPmids)]
+
+      # 4. Sum and return
+      sum(as.vector(relevance))
+    })
+
+  # Normalize the weight vector, scales and shifts it to the right
+  weight <- ((weight - min(weight)) / (max(weight) - min(weight))) * 1.5 + 0.5
+  return(weight)
+}
+
+analyseData <- function(name, relevance=FALSE, threshold=0) {
   filename <- paste(c("records/record_", name, ".R"), collapse="")
   load(filename)
 
@@ -69,6 +149,10 @@ analyseData <- function(name, relevance=FALSE) {
   if(sum(!is.na(entries)) == 0) {
     print("No records found")
     return(NULL)
+  }
+
+  if(threshold > 0 ){
+    entries<-cleanPmidsByWeight(name,entries,threshold)
   }
   
   dates <- as.Date(entries$date_created)
@@ -99,50 +183,7 @@ analyseData <- function(name, relevance=FALSE) {
 
 
   if( relevance ){
-
-    pmidsFilename <- paste(c("pmids/pmid_", name, ".R"), collapse="")
-    load(pmidsFilename)
-
-    pmidsByTrimester <- list()
-    # Run through all dates
-    for(i in 1:nrow(entries[valid.dates,])){
-      # Convert date to trimester
-      d <- years[i]
-      m <- substr(d,6,7)
-      y <- substr(d,1,5)
-      m <- ((strtoi(m, base=10) - 1) %/% 3) * 3 + 1
-      tri <- paste(c(y,m), collapse="")
-
-      # Add pmid to map with trimester  
-      pmidsByTrimester[[tri]] <- c(pmidsByTrimester[[tri]], entries[i,]$pmid)
-    }
-    
-    # Relevance (number of occurences) of each pmid related to the drug
-    pmidsRelevance <- table(pmids)
-
-    weight <- sapply(x, function(x)
-      {
-        # 1. Get the trimester
-        d <- as.Date(x)
-        d <- format(d, format="%Y-%m")
-
-        if(substr(d,6,6) == "0"){
-          d <- paste(c(substr(d,1,5), substr(d,7,7)), collapse="")
-        }
-
-        # 2. Get pmids that were published in that trimester
-        #interestingPmids <- entries[which(entries$date_created >= x & entries$date_created < d),]$pmid
-        interestingPmids <- pmidsByTrimester[[d]]
-
-        # 3. Search relevance of the pmids
-        relevance <- pmidsRelevance[which(names(pmidsRelevance) %in% interestingPmids)]
-
-        # 4. Sum and return
-        sum(as.vector(relevance))
-      })
-
-    # Normalize the weight vector, scales and shifts it to the right
-    weight <- ((weight - min(weight)) / (max(weight) - min(weight))) * 1.5 + 0.5
+    weight <- weightPmids(name)
   }
   else{
     weight <- numeric(length(x)) + 1
