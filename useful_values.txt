@@ -4,3 +4,6 @@ number of publications in 1960		?
 number of publications in 1980		?
 number of publications in 1990		?
 slope of the line between 1990-present	?
+
+clusters are stable. Meaning the elements don't change a lot by increasing it's number ?
+
