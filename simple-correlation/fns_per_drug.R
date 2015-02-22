@@ -86,8 +86,11 @@ cleanPmidsByWeight <- function(name, entries, threshold){
 
   reducedEntries <- merge(entries, countsByPmids, by="pmid")
 
-  # Select only entries that have a percentage of pmids bigger than a threshold
-  selected <- reducedEntries$n / reducedEntries$count > threshold
+  totalOccurences <- sum(reducedEntries$n)
+
+  # Divide the number of occurences n of a pmid by the sum of all occurences (local frequency)
+  # Multiply that by the inverse of the number of drugs referenced by that pmid ("global" frequency)
+  selected <- (reducedEntries$n / totalOccurences) * (1 / reducedEntries$count) > threshold
 
   return(reducedEntries[selected,])
 }
