@@ -78,7 +78,7 @@ globalCountPmids <- function(name) {
   return(countsByPmids)
 }
 
-cleanPmidsByWeight <- function(name, entries, threshold){
+cleanPmidsByWeight <- function(name, entries){
 
   countsByPmids <- globalCountPmids(name)
 
@@ -90,7 +90,13 @@ cleanPmidsByWeight <- function(name, entries, threshold){
 
   # Divide the number of occurences n of a pmid by the sum of all occurences (local frequency)
   # Multiply that by the inverse of the number of drugs referenced by that pmid ("global" frequency)
-  selected <- (reducedEntries$n / totalOccurences) * (1 / reducedEntries$count) > threshold
+  weight <- (reducedEntries$n / totalOccurences) * (1 / reducedEntries$count)
+
+  # Derive a threshold. Subtract the standard deviation from the mean and get all
+  # pmids that have a greater weight than that. Keep approximately 85% of the data
+  threshold <- mean(weight) - sd(weight)
+
+  selected <- weight > threshold
 
   return(reducedEntries[selected,])
 }
@@ -142,7 +148,7 @@ weightPmids <- function(name, entries, valid.dates, years, x){
   return(weight)
 }
 
-analyseData <- function(name, relevance=FALSE, threshold=0) {
+analyseData <- function(name, relevance=FALSE, clean=FALSE) {
   filename <- paste(c("records/record_", name, ".R"), collapse="")
   load(filename)
 
@@ -154,8 +160,8 @@ analyseData <- function(name, relevance=FALSE, threshold=0) {
     return(NULL)
   }
 
-  if(threshold > 0 ){
-    entries<-cleanPmidsByWeight(name,entries,threshold)
+  if( clean ){
+    entries<-cleanPmidsByWeight(name,entries)
   }
   
   dates <- as.Date(entries$date_created)
