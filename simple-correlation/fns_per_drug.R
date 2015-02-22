@@ -92,9 +92,9 @@ cleanPmidsByWeight <- function(name, entries){
   # Multiply that by the inverse of the number of drugs referenced by that pmid ("global" frequency)
   weight <- (reducedEntries$n / totalOccurences) * (1 / reducedEntries$count)
 
-  # Derive a threshold. Subtract the standard deviation from the mean and get all
-  # pmids that have a greater weight than that. Keep approximately 85% of the data
-  threshold <- mean(weight) - sd(weight)
+  # Derive a threshold. Keep 85% of the data which would be approximately the same as
+  # subtracting the standard deviation from the mean if the data followed a normal distribution
+  threshold <- quantile(weight, 0.15)
 
   selected <- weight > threshold
 
