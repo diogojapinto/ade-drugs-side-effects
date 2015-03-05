@@ -18,23 +18,47 @@ analyseAllData <- function() {
   
   filename <- paste(c("data_", as.character(Sys.Date()), ".R"), collapse="")
   
-  for(record in availableRecords) {
-    drugName <- str_match(record, "record_(.*).R")[1,2]
-    if(is.na(drugName)) {
-      next
+  # make cluster
+#   cl <- makeCluster(4) #detectCores() - 1)
+#   registerDoParallel(cl, cores = 4) #detectCores() - 1)
+#   
+#   pmids = foreach(record = availableRecords, .packages=c("stringr"), .export=ls(envir=globalenv()), .combine=rbind) %dopar% {
+#     drugName <- str_match(record, "record_(.*).R")[1,2]
+#     if(is.na(drugName)) {
+#       return(list(0))
+#     }
+#     print(paste(c("Processing ", drugName)), collapse="")
+#     drugResults <- analyseData(drugName, TRUE, TRUE)
+#     unname(drugResults)
+#     if(!is.null(drugResults) && length(drugResults) != 0) {
+#       regressions <- rbind(regressions, data.frame(drugName=drugName, before=drugResults[1], after=drugResults[2]))
+#       
+#       save(regressions, file=filename)
+#       
+#       msg <- paste(c("Saved current data to ", filename))
+#       print(msg)
+#     }
+#   }
+#   
+#   stopCluster(cl)
+  
+    for(record in availableRecords) {
+      drugName <- str_match(record, "record_(.*).R")[1,2]
+      if(is.na(drugName)) {
+        next
+      }
+      print(paste(c("Processing ", drugName)), collapse="")
+      drugResults <- analyseData(drugName, FALSE, TRUE)
+      unname(drugResults)
+      if(!is.null(drugResults) && length(drugResults) != 0) {
+        regressions <- rbind(regressions, data.frame(drugName=drugName, before=drugResults[1], after=drugResults[2]))
+       
+        save(regressions, file=filename)
+        
+        msg <- paste(c("Saved current data to ", filename))
+        print(msg)
+      }
     }
-    print(paste(c("Processing ", drugName)), collapse="")
-    drugResults <- analyseData(drugName)
-    unname(drugResults)
-    if(!is.null(drugResults) && length(drugResults) != 0) {
-      regressions <- rbind(regressions, data.frame(drugName=drugName, before=drugResults[1], after=drugResults[2]))
-     
-      save(regressions, file=filename)
-      
-      msg <- paste(c("Saved current data to ", filename))
-      print(msg)
-    }
-  }
   
   return(regressions)
 }

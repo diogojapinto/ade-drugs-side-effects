@@ -1,4 +1,12 @@
 ##
+## Necessary libraries
+##
+library("iterators")
+library("parallel")
+library("foreach")
+library("doParallel")
+
+##
 ## Set the working directory correctly
 ##
 
@@ -6,7 +14,7 @@ script.dir <- dirname(sys.frame(1)$ofile)
 setwd(script.dir)
 
 ##
-## Load additional filess
+## Load additional files
 ##
 
 source("mysql_con.R")
