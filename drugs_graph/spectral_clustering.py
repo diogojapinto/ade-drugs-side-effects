@@ -17,13 +17,14 @@ Steps:  1. Pre-process
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
 
 def get_clusters(graph, nr_clusters):
     """ Retrieves the clusters achieved by multi-level Spectral Clustering """
     _, eigenvectors = np.linalg.eig(graph)
+    eigenvectors = eigenvectors.transpose()
 
     # plt.plot(sorted(eigenvectors[1, :]))
     # plt.show()

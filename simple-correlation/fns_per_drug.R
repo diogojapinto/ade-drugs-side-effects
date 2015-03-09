@@ -94,8 +94,7 @@ cleanPmidsByWeight <- function(name, entries){
 
   # Derive a threshold. Keep 85% of the data which would be approximately the same as
   # subtracting the standard deviation from the mean if the data followed a normal distribution
-  #threshold <- quantile(weight, 0.15)
-  threshold <- quantile(weight, 0.40)
+  threshold <- quantile(weight, 0.15)
   
   selected <- weight > threshold
 
