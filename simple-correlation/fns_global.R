@@ -48,7 +48,7 @@ analyseAllData <- function() {
         next
       }
       print(paste(c("Processing ", drugName)), collapse="")
-      drugResults <- analyseData(drugName, FALSE, TRUE)
+      drugResults <- analyseData(drugName, clean_threshold=0.3)
       unname(drugResults)
       if(!is.null(drugResults) && length(drugResults) != 0) {
         regressions <- rbind(regressions, data.frame(drugName=drugName, before=drugResults[1], after=drugResults[2]))

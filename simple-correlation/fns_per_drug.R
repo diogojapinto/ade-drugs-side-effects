@@ -78,7 +78,7 @@ globalCountPmids <- function(name) {
   return(countsByPmids)
 }
 
-cleanPmidsByWeight <- function(name, entries){
+cleanPmidsByWeight <- function(name, entries, threshold){
 
   countsByPmids <- globalCountPmids(name)
 
@@ -86,17 +86,21 @@ cleanPmidsByWeight <- function(name, entries){
 
   reducedEntries <- merge(entries, countsByPmids, by="pmid")
 
-  totalOccurences <- sum(reducedEntries$n)
+  totalOccurences <- max(reducedEntries$n)
+  
+  nrDrugs <- length(list.files(path="./records/"))
 
   # Divide the number of occurences n of a pmid by the sum of all occurences (local frequency)
   # Multiply that by the inverse of the number of drugs referenced by that pmid ("global" frequency)
-  weight <- (reducedEntries$n / totalOccurences) * (1 / reducedEntries$count)
+  weight <- (reducedEntries$n / totalOccurences) * log(nrDrugs / reducedEntries$count)
 
+  
   # Derive a threshold. Keep 85% of the data which would be approximately the same as
   # subtracting the standard deviation from the mean if the data followed a normal distribution
-  threshold <- quantile(weight, 0.15)
+  t <- quantile(weight, threshold)
   
-  selected <- weight > threshold
+  
+  selected <- weight >= t
 
   return(reducedEntries[selected,])
 }
@@ -148,7 +152,7 @@ weightPmids <- function(name, entries, valid.dates, years, x){
   return(weight)
 }
 
-analyseData <- function(name, relevance=FALSE, clean=FALSE) {
+analyseData <- function(name, clean_threshold=0, relevance=FALSE) {
   filename <- paste(c("records/record_", name, ".R"), collapse="")
   load(filename)
 
@@ -160,7 +164,7 @@ analyseData <- function(name, relevance=FALSE, clean=FALSE) {
     return(NULL)
   }
 
-  if( clean ){
+  if( clean_threshold > 0 ){
     entries<-cleanPmidsByWeight(name,entries)
   }
   
