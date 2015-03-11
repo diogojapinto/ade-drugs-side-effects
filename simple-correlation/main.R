@@ -5,6 +5,8 @@ library("iterators")
 library("parallel")
 library("foreach")
 library("doParallel")
+library("RTextTools")
+library("topicmodels")
 
 ##
 ## Set the working directory correctly
