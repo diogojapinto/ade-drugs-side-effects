@@ -180,7 +180,8 @@ applyLda <- function(name, k){
 
   entries <- divideByTrimester(entries)
 
-  saveName <- paste(c("topics/", name, "/"), collapse="")
+  saveName <- paste(c("topics/", name), collapse="")
+  dir.create(saveName, showWarnings = FALSE, recursive=TRUE)
 
   for(t in unique(entries$trimester)){
     # Get entries from trimester t
@@ -190,15 +191,17 @@ applyLda <- function(name, k){
     # Get abtracts from this pmids and run LDA
     abstracts <- getAbstracts(pmids)
 
-    # Maybe check the weighting. Can use tf-idf or just tf
-    matrix <- create_matrix(abstracts, language="english", removeNumbers=TRUE, stemWords=TRUE)
-    lda <- LDA(matrix,k)
+    if( nrow(abstracts) > 0 ){
+      # Maybe check the weighting. Can use tf-idf or just tf
+      matrix <- create_matrix(abstracts, language="english", removeNumbers=TRUE, stemWords=TRUE)
+      lda <- LDA(matrix,k)
 
-    # Save this terms for further analysis
-    f <- paste(c(saveName, as.character(t), ".R"), collapse="")
-    terms <- terms(lda)
-    
-    save(terms, file=f)
+      # Save this terms for further analysis
+      f <- paste(c(saveName, "/", as.character(t), ".R"), collapse="")
+      terms <- terms(lda)
+      
+      save(terms, file=f)
+    }
   }
 }
 
