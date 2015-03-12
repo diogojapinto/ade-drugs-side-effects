@@ -89,3 +89,16 @@ getAllReleaseDates <- function() {
   dbDisconnect(medlineConn)
   return(res)
 }
+
+getAbstracts <- function(pmids){
+  medlineConn <- getConnection(dbname='medline')
+  terms <- paste0(pmids, collapse=", ")
+  qs <- c("SELECT distinct(abstract_text) 
+          FROM medline_citation_other_abstract 
+          WHERE pmid in (", terms,
+          ") AND type NOT LIKE 'Publisher'")
+  query <- paste(qs, collapse="")
+  res <- query(medlineConn, query, n=1000)
+  dbDisconnect(medlineConn)
+  return(res)
+}

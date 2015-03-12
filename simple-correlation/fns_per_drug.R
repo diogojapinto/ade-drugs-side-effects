@@ -152,6 +152,59 @@ weightPmids <- function(name, entries, valid.dates, years, x){
   return(weight)
 }
 
+divideByTrimester <- function(entries){
+  valid.dates <- entries$date_created >= as.Date("1990-01-01") & entries$date_created <= as.Date("2013-12-31")
+  entries <- entries[valid.dates,]
+
+  years <- format(entries$date_created, format="%Y-%m")
+
+  # Aggregates occurences by trimester
+  trimester <- sapply(years, function(x)
+    {
+      m <- substr(x,6,7)
+      y <- substr(x,1,5)
+      m <- ((strtoi(m, base=10) - 1) %/% 3) * 3 + 1
+      paste(c(y,m,"-01"), collapse="")
+    })
+
+  entries$trimester <- as.Date(trimester, format="%Y-%m-%d")
+
+  return(entries)
+}
+
+applyLda <- function(name, k){
+  filename <- paste(c("records/record_", name, ".R"), collapse="")
+  load(filename)
+
+  entries <-records[[2]]
+
+  entries <- divideByTrimester(entries)
+
+  saveName <- paste(c("topics/", name), collapse="")
+  dir.create(saveName, showWarnings = FALSE, recursive=TRUE)
+
+  for(t in unique(entries$trimester)){
+    # Get entries from trimester t
+    trimester.indices <- which(entries$trimester == t)
+    pmids <- entries[trimester.indices,]$pmid
+
+    # Get abtracts from this pmids and run LDA
+    abstracts <- getAbstracts(pmids)
+
+    if( nrow(abstracts) > 0 ){
+      # Maybe check the weighting. Can use tf-idf or just tf
+      matrix <- create_matrix(abstracts, language="english", removeNumbers=TRUE, stemWords=TRUE)
+      lda <- LDA(matrix,k)
+
+      # Save this terms for further analysis
+      f <- paste(c(saveName, "/", as.character(t), ".R"), collapse="")
+      terms <- terms(lda)
+      
+      save(terms, file=f)
+    }
+  }
+}
+
 analyseData <- function(name, clean_threshold=0, relevance=FALSE) {
   filename <- paste(c("records/record_", name, ".R"), collapse="")
   load(filename)
