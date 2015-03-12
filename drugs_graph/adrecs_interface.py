@@ -68,6 +68,21 @@ def get_all_drugs_ids():
 
     return ids
 
+def get_all_drugs_names():
+    """ Retrieves all the names of drugs on the database """
+    query = """SELECT DISTINCT drug.name
+               FROM drug"""
+    
+    cnx = get_connection()
+    cursor = cnx.cursor()
+    cursor.execute(query, id)
+
+    names = cursor.fetchall()
+
+    cursor.close()
+    close_connection(cnx)
+
+    return names
 
 def get_connections_drug_to_drug():
     """ Retrieves the drug-adr connections, and builds a graph on it (drug-drug) """
