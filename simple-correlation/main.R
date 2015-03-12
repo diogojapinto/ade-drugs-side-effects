@@ -6,6 +6,7 @@ library("parallel")
 library("foreach")
 library("doParallel")
 library("RTextTools")
+library("SparseM")
 library("topicmodels")
 
 ##

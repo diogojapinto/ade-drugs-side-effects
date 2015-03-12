@@ -212,6 +212,11 @@ analyseData <- function(name, clean_threshold=0, relevance=FALSE) {
   # Publications and date of publication
   entries <- records[[2]]
   
+  # Select pmids by mesh headings
+  pmids <- entries[[1]]
+  selected_pmids <- filterByMesh(pmids)
+  entries <- entries[entries$pmid %in% selected_pmids]
+  
   if(sum(!is.na(entries)) == 0) {
     print("No records found")
     return(NULL)
