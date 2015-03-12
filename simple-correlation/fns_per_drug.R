@@ -218,7 +218,7 @@ analyseData <- function(name, clean_threshold=0, relevance=FALSE) {
   }
 
   if( clean_threshold > 0 ){
-    entries<-cleanPmidsByWeight(name,entries)
+    entries<-cleanPmidsByWeight(name,entries, clean_threshold)
   }
   
   dates <- as.Date(entries$date_created)

@@ -102,3 +102,12 @@ loadPMIDsCount <- function() {
   
   return(pmids)
 }
+
+##
+## Filters the pmids by mesh headings contents
+##
+filterByMesh <- function(pmids) {
+  mesh_headings = scan("helpers/selected_mesh.txt", what=character(), sep='\n')
+  pmids = hasSelectedMesh(pmids, mesh_headings)
+  return pmids
+}

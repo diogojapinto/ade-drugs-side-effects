@@ -11,8 +11,8 @@ for(conn in dbListConnections(MySQL())) {
 ##
 ## Function to connect to databases
 ##
-getConnection <- function(user='dpinto', password='dpinto', dbname, host='porto.fe.up.pt'){
-  conn <- dbConnect(MySQL(), user=user, password=password, dbname=dbname, host=host)
+getConnection <- function(user='dm', password='dm', dbname, host='193.136.39.17'){
+  conn <- dbConnect(MySQL(), user=user, password=password, dbname=dbname, host=host, port=34203)
   return(conn)
 }
 

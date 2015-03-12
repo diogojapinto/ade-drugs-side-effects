@@ -90,6 +90,23 @@ getAllReleaseDates <- function() {
   return(res)
 }
 
+hasSelectedMesh <- function(pmids, mesh_terms){
+  medlineConn <- getConnection(dbname='medline')
+  pmids <- paste0(pmids, collapse=", ")
+  mesh_terms <- paste0(mesh_terms, collapse=', ')
+  qs <- c("SELECT medline_citation pmid
+          FROM medline_citation
+            INNER JOIN medline_mesh_heading
+            ON medline_citation.pmid = medline_mesh_heading.pmid
+          WHERE medline_citation.pmid IN (", pmids,
+          ") AND medline_mesh_heading.descriptor_name IN (",
+          mesh_terms, ")")
+  query <- paste(qs, collapse="")
+  res <- query(medlineConn, query, n=1000)
+  dbDisconnect(medlineConn)
+  return(res)
+}
+
 getAbstracts <- function(pmids){
   medlineConn <- getConnection(dbname='medline')
   terms <- paste0(pmids, collapse=", ")
