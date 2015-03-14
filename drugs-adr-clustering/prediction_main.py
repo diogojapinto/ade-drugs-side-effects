@@ -52,7 +52,7 @@ def main():
     p_mat, q_mat = lf.gradient_descent(matrix, p_mat, q_mat, testing)
 
     # test things out
-    #TODO
+    test_latent_factors(q_mat, )
 
     # Return the matrixes with the corresponding indexes
     u_df = pandas.DataFrame(p_mat, index=drugs)

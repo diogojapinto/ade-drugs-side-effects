@@ -40,8 +40,8 @@ def reconstruct_matrix(u_mat, v_mat, s_array=None):
 
 def get_scaled_matrices(u_mat, s_array, v_mat):
     """ Computes the scaled U and V matrices based on the Sigma array """
-    scaled_u_mat = u_mat.dot(get_s_matrix(s_array))
-    scaled_v_mat = get_s_matrix(s_array).dot(v_mat)
+    scaled_u_mat = u_mat.dot(get_s_matrix(np.sqrt(s_array)))
+    scaled_v_mat = get_s_matrix(np.sqrt(s_array)).dot(v_mat)
 
     return scaled_u_mat, scaled_v_mat
 
