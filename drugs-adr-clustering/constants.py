@@ -15,6 +15,6 @@ EXTENDED_TEST_SET_SIZE = 0.2
 
 ENERGY_TO_RETAIN = 0.9
 
-GRADIENT_DESCENT_LAMBDA = 0.5
-REGULARIZATION_PARAMETER = 0.5    # trading of between predicted performance on the model
+LEARNING_RATE = 0.3
+REGULARIZATION_PARAM = 0.5    # trading of between predicted performance on the model
                                   # (high value), versus the complexity of the model (low value)
