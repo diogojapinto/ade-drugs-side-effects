@@ -14,6 +14,8 @@ import pandas
 from constants import MAX_TO_KEEP, MIN_TO_KEEP, NR_ITERATIONS
 import numpy as np
 import scipy as sp
+import datetime
+import time
 
 def main():
     """ Entry function.
@@ -27,11 +29,14 @@ def main():
     try:
         matrix_df = pk.load(open('data/bipartite_df.p', 'rb'))
     except FileNotFoundError:
+        log('Fetching drug adr matrix')
         matrix_df = ai.get_drug_adr_matrix()
         pk.dump(matrix_df, open('data/bipartite_df.p', 'wb'))
 
-    # get the training and test sets
+    
+    log('Dividing matrix in test and training sets')
 
+    # get the training and test sets
     if testing:
         matrix_df, test_set = get_training_and_test_sets(matrix_df)
 
@@ -40,20 +45,25 @@ def main():
     drugs = matrix_df.index.values.tolist()
     adrs = matrix_df.columns.values.tolist()
 
+    log('Computing SVD')
     # compute the svd
     u_mat, s_array, v_mat = lf.compute_svd(matrix)
 
+    log('Reducing Singular Values')
     # remove the unuseful lines
     u_mat, s_array, v_mat = lf.reduce_singular_values(u_mat, s_array, v_mat)
 
+    log('Computing Root Mean Squared')
     # confirm the RMSE
     preliminary_rmse = lf.compute_rmse(matrix, lf.reconstruct_matrix(u_mat, v_mat, s_array))
     print("RMSE after reducing dimension: %d" % (preliminary_rmse))
 
+    log('Applying gradient descent')
     # scale the matrixes and perform gradient descent on it
     p_mat, q_mat = lf.get_scaled_matrices(u_mat, s_array, v_mat)
     p_mat, q_mat = lf.gradient_descent(matrix, p_mat, q_mat, testing)
 
+    log('Testing...')
     # test things out
     test_latent_factors(q_mat, test_set)
 
@@ -97,6 +107,11 @@ def test_latent_factors(q_mat, test_set):
     print("Variance : {0:8.6f}".format(sp.var(errors)))
     print("Std. deviation : {0:8.6f}".format(sp.std(errors)))
 
+def log(message):
+    ts = time.time()
+    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
+    print('[' + st + ']', message)
 
 if __name__ == "__main__":
     main()
@@ -104,12 +119,12 @@ if __name__ == "__main__":
 
 """
 funcoes a implementar:
-    calcular distância entre drugs (cosine distance entre drug * adr2concept)
-    calcular distância entre adrs (cosine distance entre adr * drug2concept)
+    calcular distancia entre drugs (cosine distance entre drug * adr2concept)
+    calcular distancia entre adrs (cosine distance entre adr * drug2concept)
 
-    cluster de adrs (baseado no cosine distance dos concepts(k-means, k=nº de adrs pode resolver isto))
-    cluster de drugs (baseado no cosine distance dos concepts(k-means, k=nº de drugs pode resolver isto))
+    cluster de adrs (baseado no cosine distance dos concepts(k-means, k=no de adrs pode resolver isto))
+    cluster de drugs (baseado no cosine distance dos concepts(k-means, k=no de drugs pode resolver isto))
 
     prever adrs de drugs (drug * adr2concept * adr2concept^T)
-    prever drugs que têm uma dada adr (adr * drug2concept * drug2concept^T)
+    prever drugs que tem uma dada adr (adr * drug2concept * drug2concept^T)
 """
