@@ -11,10 +11,10 @@ def main():
         When computation is too long, saves objects to files"""
 
     try:
-        graph = pk.load(open('graph.p', 'rb'))
+        graph = pk.load(open('data/graph.p', 'rb'))
     except FileNotFoundError:
         graph = ai.get_connections_drug_to_drug()
-        pk.dump(graph, open('graph.p', 'wb'))
+        pk.dump(graph, open('data/graph.p', 'wb'))
 
     fout = open("clusters.log", "w")
 
