@@ -62,17 +62,19 @@ def reduce_singular_values(u_mat, s_array, v_mat):
     base_energy = sum([x ** 2 for x in s_array])
 
     while True:
-        min_val = min(s_array)
+        # s_array is ordered in descending order
+        min_index = len(s_array)-1
+
+        min_val = s_array[min_index]
         new_energy = sum([x ** 2 for x in s_array]) - min_val ** 2
 
         if new_energy < base_energy * ENERGY_TO_RETAIN:
             break
 
         # else delete the corresponding rows and columns
-        min_index = np.where(s_array == min(s_array))[0]
-        np.delete(s_array, min_index)
-        np.delete(u_mat, min_index, 1)
-        np.delete(v_mat, min_index, 0)
+        s_array = np.delete(s_array, min_index)
+        u_mat = np.delete(u_mat, min_index, 1)
+        v_mat = np.delete(v_mat, min_index, 0)
 
     save_to_file(u_mat, s_array, v_mat, REDUCED_ID)
 
