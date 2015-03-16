@@ -24,7 +24,10 @@ def main():
     testing = False
 
     if len(argv) > 1 and argv[1] == 'test':
+        print("Running in test mode")
         testing = True
+    else:
+        print("Running in normal mode")
 
     try:
         matrix_df = pk.load(open('data/bipartite_df.p', 'rb'))
@@ -33,11 +36,9 @@ def main():
         matrix_df = ai.get_drug_adr_matrix()
         pk.dump(matrix_df, open('data/bipartite_df.p', 'wb'))
 
-    
-    log('Dividing matrix in test and training sets')
-
     # get the training and test sets
     if testing:
+        log('Dividing matrix in test and training sets')
         matrix_df, test_set = get_training_and_test_sets(matrix_df)
 
     # retrieve the numpy matrix, drugs names and adrs names
@@ -56,7 +57,7 @@ def main():
     log('Computing Root Mean Squared')
     # confirm the RMSE
     preliminary_rmse = lf.compute_rmse(matrix, lf.reconstruct_matrix(u_mat, v_mat, s_array))
-    print("RMSE after reducing dimension: %d" % (preliminary_rmse))
+    print("RMSE after reducing dimension: %f" % (preliminary_rmse))
 
     log('Applying gradient descent')
     # scale the matrixes and perform gradient descent on it
@@ -65,7 +66,8 @@ def main():
 
     log('Testing...')
     # test things out
-    test_latent_factors(q_mat, test_set)
+    if testing:
+        test_latent_factors(q_mat, test_set)
 
     # Return the matrixes with the corresponding indexes
     u_df = pandas.DataFrame(p_mat, index=drugs)

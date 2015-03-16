@@ -98,7 +98,7 @@ def compute_rmse(original_mat, new_mat):
 def compute_sse_with_length(original_mat, p_mat, q_mat):
     """ Computes the Sum-of-Squared-Errors """
 
-    new_mat = p_mat * q_mat
+    new_mat = p_mat.dot(q_mat)
 
     differences_sum = 0
     for original_val, new_val in zip(np.nditer(original_mat), np.nditer(new_mat)):
@@ -136,7 +136,7 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False):
 
         # break if the steps are too low
         if (np.allclose(np.sum(np.absolute(p_step)), [0]) and 
-            np.allclose(np.sum(np.absolute(q_step)), [0])):
+           np.allclose(np.sum(np.absolute(q_step)), [0])):
             break
 
         # get the new matrices
@@ -145,13 +145,14 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False):
 
         counter += 1
 
-        # loging info is very important in ML
+         loging info is very important in ML
         if testing:
-            log_file.write("Iteration %d: \t%f\t%f" % (
+            log_file.write("Iteration %d: \t%f\t%f\n" % (
                 counter,
                 compute_rmse(original_mat, p_mat.dot(q_mat)), 
                 compute_sse_with_length(original_mat, p_mat, q_mat)))
 
     # save the data
+    log_file.close()
     pk.dump([p_mat, q_mat], open('data/svd_' + IMPROVED_ID + '.p', 'wb'))
     return p_mat, q_mat
