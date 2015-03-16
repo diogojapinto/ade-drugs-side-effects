@@ -145,7 +145,7 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False):
 
         counter += 1
 
-         loging info is very important in ML
+        # loging info is very important in ML
         if testing:
             log_file.write("Iteration %d: \t%f\t%f\n" % (
                 counter,
