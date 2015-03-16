@@ -131,11 +131,12 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False):
 
         diff_matrix = original_mat - new_mat
 
-        p_step = - 2 * diff_matrix.dot(q_mat.transpose()) + 2 * REGULARIZATION_PARAM * p_mat
-        q_step = - 2 * p_mat.transpose().dot(diff_matrix) + 2 * REGULARIZATION_PARAM * q_mat
+        p_step = - 2 * diff_matrix.dot(q_mat.transpose()) - 2 * REGULARIZATION_PARAM * p_mat
+        q_step = - 2 * p_mat.transpose().dot(diff_matrix) - 2 * REGULARIZATION_PARAM * q_mat
 
         # break if the steps are too low
-        if np.isclose(p_step, 0) and np.isclose(q_step, 0):
+        if (np.allclose(np.sum(np.absolute(p_step)), [0]) and 
+            np.allclose(np.sum(np.absolute(q_step)), [0])):
             break
 
         # get the new matrices
