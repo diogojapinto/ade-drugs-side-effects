@@ -111,6 +111,9 @@ def test_latent_factors(q_mat, test_set):
     print("Variance : {0:8.6f}".format(sp.var(errors)))
     print("Std. deviation : {0:8.6f}".format(sp.std(errors)))
 
+def predict(q_mat, obj):
+    return (obj.dot(q_mat.transpose())).dot(q_mat)
+
 def log(message):
     ts = time.time()
     st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
