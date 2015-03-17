@@ -16,6 +16,7 @@ import numpy as np
 import scipy as sp
 import datetime
 import time
+import pdb
 
 def main():
     """ Entry function.
@@ -54,14 +55,15 @@ def main():
     # remove the unuseful lines
     u_mat, s_array, v_mat = lf.reduce_singular_values(u_mat, s_array, v_mat)
 
-    log('Computing Root Mean Squared')
+    # log('Computing Root Mean Squared')
     # confirm the RMSE
-    preliminary_rmse = lf.compute_rmse(matrix, lf.reconstruct_matrix(u_mat, v_mat, s_array))
-    print("RMSE after reducing dimension: %f" % (preliminary_rmse))
+    # preliminary_rmse = lf.compute_rmse(matrix, lf.reconstruct_matrix(u_mat, v_mat, s_array))
+    # print("RMSE after reducing dimension: %f" % (preliminary_rmse))
 
     log('Applying gradient descent')
-    # scale the matrixes and perform gradient descent on it
+    # scale the matrixes and perform gradient desc«ent on it
     p_mat, q_mat = lf.get_scaled_matrices(u_mat, s_array, v_mat)
+    # pdb.set_trace()
     p_mat, q_mat = lf.gradient_descent(matrix, p_mat, q_mat, testing)
 
     log('Testing...')
@@ -70,10 +72,10 @@ def main():
         test_latent_factors(q_mat, test_set)
 
     # Return the matrixes with the corresponding indexes
-    u_df = pandas.DataFrame(p_mat, index=drugs)
-    v_df = pandas.DataFrame(q_mat.transpose(), index=adrs)
+    p_df = pandas.DataFrame(p_mat, index=drugs)
+    q_df = pandas.DataFrame(q_mat.transpose(), index=adrs)
 
-    return u_df, v_df
+    return p_df, q_df
 
 def test_latent_factors(q_mat, test_set):
     """ Computes the average error of the obtained latent factors model
@@ -130,3 +132,6 @@ funcoes a implementar:
     prever adrs de drugs (drug * adr2concept * adr2concept^T)
     prever drugs que tem uma dada adr (adr * drug2concept * drug2concept^T)
 """
+
+def predict_adrs(drug, q_mat):
+    pass

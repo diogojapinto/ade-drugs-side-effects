@@ -98,19 +98,9 @@ def compute_rmse(original_mat, new_mat):
 def compute_sse_with_length(original_mat, p_mat, q_mat):
     """ Computes the Sum-of-Squared-Errors """
 
-    new_mat = p_mat.dot(q_mat)
-
-    differences_sum = 0
-    for original_val, new_val in zip(np.nditer(original_mat), np.nditer(new_mat)):
-        differences_sum += (new_val - original_val) ** 2
-
-    p_norms = [x ** 2 for x in np.linalg.norm(p_mat, axis=1)]
-    q_norms = [x ** 2 for x in np.linalg.norm(q_mat, axis=0)]
-
-
-    matrices_lenghts = REGULARIZATION_PARAM * (sum(p_norms) + sum(q_norms))
-
-    return differences_sum + matrices_lenghts
+    return (np.sum((original_mat - p_mat.dot(q_mat)) ** 2) + 
+            REGULARIZATION_PARAM * (np.sum(np.linalg.norm(p_mat, axis=1)) + 
+                                    np.sum(np.linalg.norm(q_mat, axis=0))))
 
 def gradient_descent(original_mat, p_mat, q_mat, testing=False):
     """ Performs Gradient Descent over the reduced SVD matrices """
@@ -122,35 +112,49 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False):
     except FileNotFoundError:
         pass
 
+    learning_rate = LEARNING_RATE
+
     if testing:
         log_file = open("data/svd.log", 'w')
 
     counter = 0
+    last_error = -1
     while True:
         new_mat = reconstruct_matrix(p_mat, q_mat)
 
         diff_matrix = original_mat - new_mat
 
-        p_step = - 2 * diff_matrix.dot(q_mat.transpose()) - 2 * REGULARIZATION_PARAM * p_mat
-        q_step = - 2 * p_mat.transpose().dot(diff_matrix) - 2 * REGULARIZATION_PARAM * q_mat
+        p_step = - 2 * diff_matrix.dot(q_mat.transpose()) + 2 * REGULARIZATION_PARAM * p_mat
+        q_step = - 2 * p_mat.transpose().dot(diff_matrix) + 2 * REGULARIZATION_PARAM * q_mat
 
         # break if the steps are too low
-        if (np.allclose(np.sum(np.absolute(p_step)), [0]) and 
-           np.allclose(np.sum(np.absolute(q_step)), [0])):
+        step_mod_p = np.sum(np.absolute(p_step))
+        step_mod_q = np.sum(np.absolute(q_step))
+        if np.allclose(step_mod_p, [0]) and np.allclose(step_mod_q, [0]):
             break
 
         # get the new matrices
-        p_mat = p_mat - LEARNING_RATE * p_step
-        q_mat = q_mat - LEARNING_RATE * q_step
+        new_p_mat = p_mat - learning_rate * p_step
+        new_q_mat = q_mat - learning_rate * q_step
 
-        counter += 1
+        error = compute_sse_with_length(original_mat, new_p_mat, new_q_mat)
 
-        # loging info is very important in ML
-        if testing:
-            log_file.write("Iteration %d: \t%f\t%f\n" % (
-                counter,
-                compute_rmse(original_mat, p_mat.dot(q_mat)), 
-                compute_sse_with_length(original_mat, p_mat, q_mat)))
+        if last_error == -1 and counter == 0 or last_error > error:
+            counter += 1
+            last_error = error
+            p_mat = new_p_mat
+            q_mat = new_q_mat
+            # loging info is very important in ML
+            if testing:
+                log_file.write("Iteration %d: \t%.5f\n" % (
+                    counter, error))
+                log_file.flush()
+        else:
+            learning_rate = learning_rate / 3
+            log_file.write("\nChanged learning rate to %f\n" % (learning_rate))
+            log_file.flush()
+
+        
 
     # save the data
     log_file.close()
