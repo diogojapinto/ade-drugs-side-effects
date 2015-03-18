@@ -86,7 +86,7 @@ def test_latent_factors(q_mat, test_set):
     for _ in range(NR_ITERATIONS):
         line_i = np.random.randint(0, len(test_set))
         original_obj = test_set[line_i]
-        obj = original_obj.copy
+        obj = original_obj.copy()
 
 
         # put some of them in 0
