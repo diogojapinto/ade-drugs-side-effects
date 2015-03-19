@@ -97,7 +97,7 @@ def test_latent_factors(q_mat, test_set):
         nr_elems_retracted.append(0)
         line_i = np.random.randint(0, len(test_set))
         original_obj = test_set[line_i]
-        obj = original_obj.copy
+        obj = original_obj.copy()
 
 
         # put some of them in 0
@@ -130,6 +130,9 @@ def test_latent_factors(q_mat, test_set):
     print("Maximum : {0:8.6f}".format(max(errors)))
     print("Variance : {0:8.6f}".format(sp.var(errors)))
     print("Std. deviation : {0:8.6f}".format(sp.std(errors)))
+
+def predict(q_mat, obj):
+    return (obj.dot(q_mat.transpose())).dot(q_mat)
 
 def log(message):
     ts = time.time()

@@ -92,7 +92,11 @@ def compute_rmse(original_mat, new_mat):
     for original_val, new_val in zip(np.nditer(original_mat), np.nditer(new_mat)):
         differences_sum += (new_val - original_val) ** 2
 
-    result = np.sqrt(differences_sum) / (original_mat.shape[0] * original_mat.shape[1])
+    div = 1
+    for shape in original_mat.shape:
+        div = div * shape
+
+    result = np.sqrt(differences_sum) / div
     return result
 
 def compute_sse_with_length(original_mat, p_mat, q_mat):
@@ -152,8 +156,9 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False, nr_iterations=-1
             pk.dump([p_mat, q_mat], open('data/svd_' + IMPROVED_ID + '.p', 'wb'))
         else:
             learning_rate = learning_rate / 3
-            log_file.write("\nChanged learning rate to %f\n" % (learning_rate))
-            log_file.flush()
+            if testing:
+                log_file.write("\nChanged learning rate to %f\n" % (learning_rate))
+                log_file.flush()
 
         
 
