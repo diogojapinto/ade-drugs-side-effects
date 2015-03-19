@@ -16,6 +16,7 @@ import numpy as np
 import scipy as sp
 import datetime
 import time
+import random
 
 def main():
     """ Entry function.
@@ -60,31 +61,34 @@ def main():
     # remove the unuseful lines
     u_mat, s_array, v_mat = lf.reduce_singular_values(u_mat, s_array, v_mat)
 
-    # log('Computing Root Mean Squared')
-    # confirm the RMSE
-    # preliminary_rmse = lf.compute_rmse(matrix, lf.reconstruct_matrix(u_mat, v_mat, s_array))
-    # print("RMSE after reducing dimension: %f" % (preliminary_rmse))
-
     log('Applying gradient descent')
     # scale the matrixes and perform gradient desc«ent on it
     p_mat, q_mat = lf.get_scaled_matrices(u_mat, s_array, v_mat)
     
     p_mat, q_mat = lf.gradient_descent(matrix, p_mat, q_mat, testing, 200)
 
+    # Normalize
+    p_mat = p_mat.dot(np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))))
+    q_mat = np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))).dot(q_mat)
+
     log('Testing...')
     # test things out
     if testing:
+        print("Before: ")
+        test_latent_factors(v_mat, test_set)
+        print("After: ")
         test_latent_factors(q_mat, test_set)
 
     # Return the matrixes with the corresponding indexes
     p_df = pandas.DataFrame(p_mat, index=drugs)
     q_df = pandas.DataFrame(q_mat.transpose(), index=adrs)
 
+    pk.dump([p_df, q_df, s_array], open("data/final_product.p", 'wb'))
+
+    # tests a single drug, and prints info
+    test_single()
+
     return p_df, q_df
-
-def test_intermediate(status):
-    q_mat, p_mat = pk.load(open('data/bipartite_df.p', 'rb'))
-
 
 def test_latent_factors(q_mat, test_set):
     """ Computes the average error of the obtained latent factors model
@@ -131,14 +135,49 @@ def test_latent_factors(q_mat, test_set):
     print("Variance : {0:8.6f}".format(sp.var(errors)))
     print("Std. deviation : {0:8.6f}".format(sp.std(errors)))
 
-def predict(q_mat, obj):
+def test_single():
+    """ Tests a single random drug, printing the dataframe """
+    matrix_df = pk.load(open('data/bipartite_df.p', 'rb'))
+    _, q_mat, _ = pk.load(open('data/final_product.p', 'rb'))
+
+    original_drug = matrix_df.ix[random.sample(matrix_df.index.tolist(), 1)]
+
+    print("Selected %s" % original_drug.index.tolist()[0])
+
+    original_drug = original_drug.as_matrix()[0]
+    edited_drug = original_drug.copy()
+
+    zeroed_elems_ratio = (MAX_TO_KEEP - MIN_TO_KEEP) * np.random.random_sample() + MIN_TO_KEEP
+    candidates = edited_drug > 0
+
+    for index, elem in enumerate(candidates):
+        if elem == False:
+            continue
+        prob = np.random.random_sample()
+        if prob <= zeroed_elems_ratio:
+            edited_drug[index] = 0
+
+    drug_factors = edited_drug.dot(q_mat)
+    drug_prediction = drug_factors.dot(q_mat.transpose())
+
+    print("Error: %f" % lf.compute_rmse(original_drug, drug_prediction))
+
+    results_df = pandas.DataFrame([original_drug, edited_drug, drug_prediction], 
+                                  index=['original', 'prediction', 'final'])
+    print(results_df)
+    print(results_df.iloc[:, candidates])
+
+
+def predict_adrs(q_mat, obj):
+    """ predicts the adrs for a given drug """
     return (obj.dot(q_mat.transpose())).dot(q_mat)
 
 def log(message):
-    ts = time.time()
-    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    """ logs a given message, binding a timestamp """
+    timestamp = time.time()
+    time_string = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-    print('[' + st + ']', message)
+    print('[' + time_string + ']', message)
 
 if __name__ == "__main__":
     main()
@@ -155,6 +194,3 @@ funcoes a implementar:
     prever adrs de drugs (drug * adr2concept * adr2concept^T)
     prever drugs que tem uma dada adr (adr * drug2concept * drug2concept^T)
 """
-
-def predict_adrs(drug, q_mat):
-    pass

@@ -1,3 +1,8 @@
+"""
+    Plots the gradient descent results, according to a log file
+"""
+
+
 import re
 import matplotlib.pyplot as plt
 

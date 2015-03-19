@@ -106,7 +106,7 @@ def compute_sse_with_length(original_mat, p_mat, q_mat):
             REGULARIZATION_PARAM * (np.sum(np.linalg.norm(p_mat, axis=1)) + 
                                     np.sum(np.linalg.norm(q_mat, axis=0))))
 
-def gradient_descent(original_mat, p_mat, q_mat, testing=False, nr_iterations=-1):
+def gradient_descent(original_mat, p_mat, q_mat, testing=False, nr_iterations=100000):
     """ Performs Gradient Descent over the reduced SVD matrices """
 
     # tries to load an existing file
@@ -123,7 +123,7 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False, nr_iterations=-1
 
     counter = 0
     last_error = -1
-    while True:
+    while counter < nr_iterations and learning_rate > 0.00000001:
         new_mat = reconstruct_matrix(p_mat, q_mat)
 
         diff_matrix = original_mat - new_mat
@@ -143,7 +143,7 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False, nr_iterations=-1
 
         error = compute_sse_with_length(original_mat, new_p_mat, new_q_mat)
 
-        if last_error == -1 and counter == 0 or last_error > error:
+        if last_error == -1 or last_error > error:
             counter += 1
             last_error = error
             p_mat = new_p_mat
