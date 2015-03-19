@@ -16,7 +16,6 @@ import numpy as np
 import scipy as sp
 import datetime
 import time
-import pdb
 
 def main():
     """ Entry function.
@@ -39,8 +38,14 @@ def main():
 
     # get the training and test sets
     if testing:
-        log('Dividing matrix in test and training sets')
-        matrix_df, test_set = get_training_and_test_sets(matrix_df)
+        try:
+            matrix_df = pk.load(open('data/training_set.p', 'rb'))
+            test_set = pk.load(open('data/test_set.p', 'rb'))
+        except FileNotFoundError:
+            log('Dividing matrix in test and training sets')
+            matrix_df, test_set = get_training_and_test_sets(matrix_df)
+            pk.dump(matrix_df, open('data/training_set.p', 'wb'))
+            pk.dump(test_set, open('data/test_set.p', 'wb'))
 
     # retrieve the numpy matrix, drugs names and adrs names
     matrix = matrix_df.as_matrix()
@@ -63,8 +68,8 @@ def main():
     log('Applying gradient descent')
     # scale the matrixes and perform gradient desc«ent on it
     p_mat, q_mat = lf.get_scaled_matrices(u_mat, s_array, v_mat)
-    # pdb.set_trace()
-    p_mat, q_mat = lf.gradient_descent(matrix, p_mat, q_mat, testing)
+    
+    p_mat, q_mat = lf.gradient_descent(matrix, p_mat, q_mat, testing, 200)
 
     log('Testing...')
     # test things out
@@ -77,13 +82,19 @@ def main():
 
     return p_df, q_df
 
+def test_intermediate(status):
+    q_mat, p_mat = pk.load(open('data/bipartite_df.p', 'rb'))
+
+
 def test_latent_factors(q_mat, test_set):
     """ Computes the average error of the obtained latent factors model
         based on the average root_mean_square error of the test_set """
     errors = []
+    nr_elems_retracted = []
     test_set = test_set.as_matrix()
 
     for _ in range(NR_ITERATIONS):
+        nr_elems_retracted.append(0)
         line_i = np.random.randint(0, len(test_set))
         original_obj = test_set[line_i]
         obj = original_obj.copy
@@ -99,12 +110,21 @@ def test_latent_factors(q_mat, test_set):
             prob = np.random.random_sample()
             if prob <= zeroed_elems_ratio:
                 obj[index] = 0
+                nr_elems_retracted[len(nr_elems_retracted) - 1] += 1
 
         obj_factors = obj.dot(q_mat.transpose())
         new_obj = obj_factors.dot(q_mat)
 
         errors.append(lf.compute_rmse(original_obj, new_obj))
 
+    print("REMOVED OBJECTS COUNT")
+    print("Mean : {0:8.6f}".format(sp.mean(nr_elems_retracted)))
+    print("Minimum : {0:8.6f}".format(min(nr_elems_retracted)))
+    print("Maximum : {0:8.6f}".format(max(nr_elems_retracted)))
+    print("Variance : {0:8.6f}".format(sp.var(nr_elems_retracted)))
+    print("Std. deviation : {0:8.6f}".format(sp.std(nr_elems_retracted)))
+
+    print("ERRORS")
     print("Mean : {0:8.6f}".format(sp.mean(errors)))
     print("Minimum : {0:8.6f}".format(min(errors)))
     print("Maximum : {0:8.6f}".format(max(errors)))
