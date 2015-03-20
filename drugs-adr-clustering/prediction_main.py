@@ -75,9 +75,9 @@ def main():
     # test things out
     if testing:
         print("Before: ")
-        test_latent_factors(v_mat, test_set)
+        #test_latent_factors(v_mat, test_set)
         print("After: ")
-        test_latent_factors(q_mat, test_set)
+        #test_latent_factors(q_mat, test_set)
 
     # Return the matrixes with the corresponding indexes
     p_df = pandas.DataFrame(p_mat, index=drugs)
@@ -137,7 +137,7 @@ def test_latent_factors(q_mat, test_set):
 
 def test_single():
     """ Tests a single random drug, printing the dataframe """
-    matrix_df = pk.load(open('data/bipartite_df.p', 'rb'))
+    matrix_df = pk.load(open('data/test_set.p', 'rb'))
     _, q_mat, _ = pk.load(open('data/final_product.p', 'rb'))
 
     original_drug = matrix_df.ix[random.sample(matrix_df.index.tolist(), 1)]
@@ -190,7 +190,16 @@ funcoes a implementar:
 
     cluster de adrs (baseado no cosine distance dos concepts(k-means, k=no de adrs pode resolver isto))
     cluster de drugs (baseado no cosine distance dos concepts(k-means, k=no de drugs pode resolver isto))
+    --> caracterizar os clusters
 
     prever adrs de drugs (drug * adr2concept * adr2concept^T)
     prever drugs que tem uma dada adr (adr * drug2concept * drug2concept^T)
+
+    droga mais relevante num cluster
+    adr mais relevante num cluster
+
+
+    (para clustering deve ser melhor descer o threshlold do reduce_singular_values)
+
+    tirar adrs separados no tempo
 """
