@@ -230,7 +230,7 @@ def test_roc(q_mat, test_set):
         pl.ylim([0.0, 1.0])
         pl.xlabel('False Positive Rate')
         pl.ylabel('True Positive Rate')
-        pl.title('Receiver operating characteristic example')
+        pl.title('Receiver operating characteristic for %s' % drug_names[r])
         pl.legend(loc="lower right")
         pl.savefig('data/roc/' + drug_names[r])
 
