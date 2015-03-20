@@ -13,3 +13,4 @@ drugs_graph/*.txt
 *.Rhistory
 simple-correlation/helpers/popular_pmids.R
 
+drugs-adr-clustering/data/
