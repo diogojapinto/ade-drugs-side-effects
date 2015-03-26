@@ -122,7 +122,8 @@ def get_connections_drug_to_drug():
 def get_drug_adr_matrix():
     """ Retrieves the drug-adr connections, and builds a bipartite matrix based on it """
     query = """SELECT drug_id, adr_id
-               FROM drug_adr"""
+               FROM drug_adr
+               WHERE adr_id REGEXP '^..[[.full-stop.]]..[[.full-stop.]]..[[.full-stop.]]...$'"""
 
     cnx = get_connection()
     cursor = cnx.cursor()
