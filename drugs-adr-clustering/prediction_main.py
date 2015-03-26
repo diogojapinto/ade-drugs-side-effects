@@ -7,16 +7,18 @@
 
 import pickle as pk
 import adrecs_interface as ai
-from utils import get_training_and_test_sets
-from sys import argv
 import latent_factors_utils as lf
-import pandas
-from constants import MAX_TO_KEEP, MIN_TO_KEEP, NR_ITERATIONS
+import pandas as pd
 import numpy as np
 import scipy as sp
+import pylab as pl
 import datetime
 import time
 import random
+from utils import get_training_and_test_sets
+from sys import argv
+from constants import MAX_TO_KEEP, MIN_TO_KEEP, NR_ITERATIONS
+from sklearn.metrics import roc_curve, auc
 
 def main():
     """ Entry function.
@@ -31,7 +33,7 @@ def main():
         print("Running in normal mode")
 
     try:
-        matrix_df = pk.load(open('data/bipartite_df.p', 'rb'))
+        matrix_df = pd.read_pickle('data/bipartite_df.p')
     except FileNotFoundError:
         log('Fetching drug adr matrix')
         matrix_df = ai.get_drug_adr_matrix()
@@ -40,8 +42,8 @@ def main():
     # get the training and test sets
     if testing:
         try:
-            matrix_df = pk.load(open('data/training_set.p', 'rb'))
-            test_set = pk.load(open('data/test_set.p', 'rb'))
+            matrix_df = pd.read_pickle('data/training_set.p')
+            test_set = pd.read_pickle('data/test_set.p')
         except FileNotFoundError:
             log('Dividing matrix in test and training sets')
             matrix_df, test_set = get_training_and_test_sets(matrix_df)
@@ -74,19 +76,20 @@ def main():
     log('Testing...')
     # test things out
     if testing:
-        print("Before: ")
+        #print("Before: ")
         #test_latent_factors(v_mat, test_set)
-        print("After: ")
+        #print("After: ")
         #test_latent_factors(q_mat, test_set)
+        test_roc(q_mat, test_set)
 
     # Return the matrixes with the corresponding indexes
-    p_df = pandas.DataFrame(p_mat, index=drugs)
-    q_df = pandas.DataFrame(q_mat.transpose(), index=adrs)
+    p_df = pd.DataFrame(p_mat, index=drugs)
+    q_df = pd.DataFrame(q_mat.transpose(), index=adrs)
 
     pk.dump([p_df, q_df, s_array], open("data/final_product.p", 'wb'))
 
     # tests a single drug, and prints info
-    test_single()
+    #test_single()
 
     return p_df, q_df
 
@@ -137,12 +140,14 @@ def test_latent_factors(q_mat, test_set):
 
 def test_single():
     """ Tests a single random drug, printing the dataframe """
-    matrix_df = pk.load(open('data/test_set.p', 'rb'))
-    _, q_mat, _ = pk.load(open('data/final_product.p', 'rb'))
+    matrix_df = pd.read_pickle('data/test_set.p')
+    _, q_mat, _ = pd.read_pickle('data/final_product.p')
 
     original_drug = matrix_df.ix[random.sample(matrix_df.index.tolist(), 1)]
 
-    print("Selected %s" % original_drug.index.tolist()[0])
+    drug_name = original_drug.index.tolist()[0]
+
+    print("Selected %s" % drug_name)
 
     original_drug = original_drug.as_matrix()[0]
     edited_drug = original_drug.copy()
@@ -162,10 +167,75 @@ def test_single():
 
     print("Error: %f" % lf.compute_rmse(original_drug, drug_prediction))
 
-    results_df = pandas.DataFrame([original_drug, edited_drug, drug_prediction], 
-                                  index=['original', 'prediction', 'final'])
+    results_df = pd.DataFrame([original_drug, edited_drug, drug_prediction], 
+                                  index=['original', 'test', 'prediction'])
     print(results_df)
     print(results_df.iloc[:, candidates])
+
+    fpr, tpr, thresholds = roc_curve(original_drug, drug_prediction, pos_label = 5)
+    roc_auc = auc(fpr,tpr)
+    print("Area under the curve: %f" % roc_auc )
+
+    # Plot ROC curve
+    pl.clf()
+    pl.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+    pl.plot([0, 1], [0, 1], 'k--')
+    pl.xlim([0.0, 1.0])
+    pl.ylim([0.0, 1.0])
+    pl.xlabel('False Positive Rate')
+    pl.ylabel('True Positive Rate')
+    pl.title('Receiver operating characteristic example')
+    pl.legend(loc="lower right")
+    pl.savefig('data/roc/' + drug_name)
+    pl.show()
+
+def test_roc(q_mat, test_set):
+    errors = []
+    nr_elems_retracted = []
+
+    drug_names = test_set.index.tolist()
+    test_set = test_set.as_matrix()
+
+    rows, cols = test_set.shape
+    roc_areas = []
+
+    for r in range(rows):
+
+        original_obj = test_set[r]
+        obj = original_obj.copy()
+
+        # put some of them in 0
+        zeroed_elems_ratio = (MAX_TO_KEEP - MIN_TO_KEEP) * np.random.random_sample() + MIN_TO_KEEP
+        candidates = obj > 0
+
+        for index, elem in enumerate(candidates):
+            if elem == False:
+                continue
+            prob = np.random.random_sample()
+            if prob <= zeroed_elems_ratio:
+                obj[index] = 0
+
+        obj_factors = obj.dot(q_mat.transpose())
+        drug_prediction = obj_factors.dot(q_mat)
+
+        fpr, tpr, thresholds = roc_curve(original_obj, drug_prediction, pos_label = 5)
+        roc_auc = auc(fpr,tpr)
+        roc_areas.append(roc_auc)
+
+        # Plot ROC curve
+        pl.clf()
+        pl.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+        pl.plot([0, 1], [0, 1], 'k--')
+        pl.xlim([0.0, 1.0])
+        pl.ylim([0.0, 1.0])
+        pl.xlabel('False Positive Rate')
+        pl.ylabel('True Positive Rate')
+        pl.title('Receiver operating characteristic for %s' % drug_names[r])
+        pl.legend(loc="lower right")
+        pl.savefig('data/roc/' + drug_names[r])
+
+    print("Min Roc Area= %f" % min(roc_areas))
+    print("Max Roc Area= %f" % max(roc_areas))
 
 
 def predict_adrs(q_mat, obj):
