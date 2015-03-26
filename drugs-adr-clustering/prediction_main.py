@@ -66,7 +66,6 @@ def main():
     log('Applying gradient descent')
     # scale the matrixes and perform gradient desc«ent on it
     p_mat, q_mat = lf.get_scaled_matrices(u_mat, s_array, v_mat)
-    
     p_mat, q_mat = lf.gradient_descent(matrix, p_mat, q_mat, testing, 200)
 
     # Normalize
@@ -199,13 +198,15 @@ def test_roc(q_mat, test_set):
     rows, cols = test_set.shape
     roc_areas = []
 
+    print(q_mat.shape)
+
     for r in range(rows):
 
         original_obj = test_set[r]
         obj = original_obj.copy()
 
         # put some of them in 0
-        zeroed_elems_ratio = (MAX_TO_KEEP - MIN_TO_KEEP) * np.random.random_sample() + MIN_TO_KEEP
+        zeroed_elems_ratio = MAX_TO_KEEP
         candidates = obj > 0
 
         for index, elem in enumerate(candidates):
@@ -232,10 +233,13 @@ def test_roc(q_mat, test_set):
         pl.ylabel('True Positive Rate')
         pl.title('Receiver operating characteristic for %s' % drug_names[r])
         pl.legend(loc="lower right")
-        pl.savefig('data/roc/' + drug_names[r])
+        #pl.savefig('data/roc/' + drug_names[r])
 
+    print("Mean Roc Area= %f" % sp.mean(roc_areas))
     print("Min Roc Area= %f" % min(roc_areas))
     print("Max Roc Area= %f" % max(roc_areas))
+    print("Variance= %f" % sp.var(roc_areas))
+    print("Standard Deviation= %f" % sp.std(roc_areas))
 
 
 def predict_adrs(q_mat, obj):
