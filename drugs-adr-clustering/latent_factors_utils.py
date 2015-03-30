@@ -23,7 +23,7 @@ def compute_svd(matrix):
         u_mat, s_array, v_mat = load_from_file(ORIGINAL_ID)
     except FileNotFoundError:
         u_mat, s_array, v_mat = np.linalg.svd(matrix, full_matrices=False)
-        save_to_file(u_mat, s_array, v_mat, ORIGINAL_ID)
+        #save_to_file(u_mat, s_array, v_mat, ORIGINAL_ID)
     return u_mat, s_array, v_mat
 
 def get_s_matrix(s_array):
@@ -49,11 +49,11 @@ def reduce_singular_values(u_mat, s_array, v_mat):
     """ Reduces the dimension of the matrices, retaining at least ENERGY_TO_RETAIN energy """
 
     # tries to load the reduced matrices
-    try:
+    '''try:
         u_mat, s_array, v_mat = load_from_file(REDUCED_ID)
         return u_mat, s_array, v_mat
     except FileNotFoundError:
-        pass
+        pass'''
 
     u_mat = u_mat.copy()
     s_array = s_array.copy()
@@ -110,11 +110,11 @@ def gradient_descent(original_mat, p_mat, q_mat, testing=False, nr_iterations=10
     """ Performs Gradient Descent over the reduced SVD matrices """
 
     # tries to load an existing file
-    try:
+    '''try:
         p_mat, q_mat = pk.load(open('data/svd_' + IMPROVED_ID + '.p', 'rb'))
         return p_mat, q_mat
     except FileNotFoundError:
-        pass
+        pass'''
 
     learning_rate = LEARNING_RATE
 

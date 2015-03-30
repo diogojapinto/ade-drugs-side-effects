@@ -18,7 +18,8 @@ import random
 from utils import get_training_and_test_sets
 from sys import argv
 from constants import MAX_TO_KEEP, MIN_TO_KEEP, NR_ITERATIONS
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support
+from sklearn import cross_validation
 
 def main():
     """ Entry function.
@@ -47,31 +48,41 @@ def main():
         except FileNotFoundError:
             log('Dividing matrix in test and training sets')
             matrix_df, test_set = get_training_and_test_sets(matrix_df)
-            pk.dump(matrix_df, open('data/training_set.p', 'wb'))
-            pk.dump(test_set, open('data/test_set.p', 'wb'))
+            #pk.dump(matrix_df, open('data/training_set.p', 'wb'))
+            #pk.dump(test_set, open('data/test_set.p', 'wb'))
 
     # retrieve the numpy matrix, drugs names and adrs names
     matrix = matrix_df.as_matrix()
     drugs = matrix_df.index.values.tolist()
     adrs = matrix_df.columns.values.tolist()
 
-    log('Computing SVD')
-    # compute the svd
-    u_mat, s_array, v_mat = lf.compute_svd(matrix)
+    max_area = 0
+    kf=cross_validation.KFold(n=len(drugs), n_folds=10)
+    for train_index, test_index in kf:
+        log('Computing SVD')
+        # compute the svd
+        u_mat, s_array, v_mat = lf.compute_svd(matrix_df.iloc[train_index,:])
 
-    log('Reducing Singular Values')
-    # remove the unuseful lines
-    u_mat, s_array, v_mat = lf.reduce_singular_values(u_mat, s_array, v_mat)
+        log('Reducing Singular Values')
+        # remove the unuseful lines
+        u_mat, s_array, v_mat = lf.reduce_singular_values(u_mat, s_array, v_mat)
 
-    log('Applying gradient descent')
-    # scale the matrixes and perform gradient desc«ent on it
-    p_mat, q_mat = lf.get_scaled_matrices(u_mat, s_array, v_mat)
-    p_mat, q_mat = lf.gradient_descent(matrix, p_mat, q_mat, testing, 200)
+        log('Applying gradient descent')
+        # scale the matrixes and perform gradient desc«ent on it
+        p_mat, q_mat = lf.get_scaled_matrices(u_mat, s_array, v_mat)
+        p_mat, q_mat = lf.gradient_descent(matrix_df.iloc[train_index,:].as_matrix(), p_mat, q_mat, testing, 200)
 
-    # Normalize
-    p_mat = p_mat.dot(np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))))
-    q_mat = np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))).dot(q_mat)
+        # Normalize
+        p_mat = p_mat.dot(np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))))
+        q_mat = np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))).dot(q_mat)
 
+        area,_,_ =test_roc(q_mat, matrix_df.iloc[test_index,:])
+        
+        if area > max_area:
+            best_q_mat = q_mat
+            matrix_df.iloc[train_index,:].index.values.tolist()
+
+    print("Best area =",max_area)
     log('Testing...')
     # test things out
     if testing:
@@ -79,18 +90,19 @@ def main():
         #test_latent_factors(v_mat, test_set)
         #print("After: ")
         #test_latent_factors(q_mat, test_set)
-        test_roc(q_mat, test_set)
+        _, threshold, predictions = test_roc(best_q_mat, test_set)
+        precisionRecall(predictions, threshold, test_set)
 
     # Return the matrixes with the corresponding indexes
-    p_df = pd.DataFrame(p_mat, index=drugs)
-    q_df = pd.DataFrame(q_mat.transpose(), index=adrs)
+    #p_df = pd.DataFrame(p_mat, index=drugs)
+    #q_df = pd.DataFrame(q_mat.transpose(), index=adrs)
 
-    pk.dump([p_df, q_df, s_array], open("data/final_product.p", 'wb'))
+    #pk.dump([p_df, q_df, s_array], open("data/final_product.p", 'wb'))
 
     # tests a single drug, and prints info
     #test_single()
 
-    return p_df, q_df
+    return p_mat, q_mat
 
 def test_latent_factors(q_mat, test_set):
     """ Computes the average error of the obtained latent factors model
@@ -188,7 +200,7 @@ def test_single():
     pl.savefig('data/roc/' + drug_name)
     pl.show()
 
-def test_roc(q_mat, test_set):
+def test_roc(q_mat, test_set, plot=False):
     errors = []
     nr_elems_retracted = []
 
@@ -199,14 +211,16 @@ def test_roc(q_mat, test_set):
     roc_areas = []
 
     print(q_mat.shape)
+    threshs = []
+    predictions = []
 
-    for r in range(rows):
+    for r in range(len(test_set)):
 
         original_obj = test_set[r]
         obj = original_obj.copy()
 
         # put some of them in 0
-        zeroed_elems_ratio = MAX_TO_KEEP
+        zeroed_elems_ratio = 1-MAX_TO_KEEP
         candidates = obj > 0
 
         for index, elem in enumerate(candidates):
@@ -218,28 +232,70 @@ def test_roc(q_mat, test_set):
 
         obj_factors = obj.dot(q_mat.transpose())
         drug_prediction = obj_factors.dot(q_mat)
+        predictions.append(drug_prediction)
 
         fpr, tpr, thresholds = roc_curve(original_obj, drug_prediction, pos_label = 5)
         roc_auc = auc(fpr,tpr)
         roc_areas.append(roc_auc)
 
+        youden = tpr + (1-fpr)
+        maxIndex = np.where(youden == max(youden))
+        threshs.append(thresholds[maxIndex[0][0]])
+
         # Plot ROC curve
-        pl.clf()
-        pl.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
-        pl.plot([0, 1], [0, 1], 'k--')
-        pl.xlim([0.0, 1.0])
-        pl.ylim([0.0, 1.0])
-        pl.xlabel('False Positive Rate')
-        pl.ylabel('True Positive Rate')
-        pl.title('Receiver operating characteristic for %s' % drug_names[r])
-        pl.legend(loc="lower right")
-        #pl.savefig('data/roc/' + drug_names[r])
+        if(plot):
+            pl.clf()
+            pl.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+            pl.plot([0, 1], [0, 1], 'k--')
+            pl.xlim([0.0, 1.0])
+            pl.ylim([0.0, 1.0])
+            pl.xlabel('False Positive Rate')
+            pl.ylabel('True Positive Rate')
+            pl.title('Receiver operating characteristic for %s' % drug_names[r])
+            pl.legend(loc="lower right")
+            pl.savefig('data/roc/' + drug_names[r])
 
     print("Mean Roc Area= %f" % sp.mean(roc_areas))
     print("Min Roc Area= %f" % min(roc_areas))
     print("Max Roc Area= %f" % max(roc_areas))
     print("Variance= %f" % sp.var(roc_areas))
     print("Standard Deviation= %f" % sp.std(roc_areas))
+    print("\nMean thresholds= %f" % sp.mean(threshs))
+    print("Min Threshold= %f" % min(threshs))
+    print("Max Threshold %f" % max(threshs))
+    print("Variance= %f" % sp.var(threshs))
+    print("Standard Deviation= %f" % sp.std(threshs))
+
+    return sp.mean(roc_areas), sp.mean(threshs), predictions
+
+def precisionRecall(predictions, threshold, test_set):
+
+    test_set = test_set.as_matrix()
+
+    precisions = []
+    recalls = []
+    for p in range(len(predictions)):
+        original_obj = test_set[p]
+        pred = predictions[p].copy()
+
+        idx = pred >= threshold
+        pred[idx] = 5
+        pred[~idx] = 0
+
+        precision, recall, fbeta_score, support = precision_recall_fscore_support(original_obj,pred, average="macro", pos_label=5)
+        precisions.append(precision)
+        recalls.append(recall)
+
+    print("\nMean Precision= %f" % sp.mean(precisions))
+    print("Min Precision= %f" % min(precisions))
+    print("Max Precision= %f" % max(precisions))
+    print("Variance= %f" % sp.var(precisions))
+    print("Standard Deviation= %f" % sp.std(precisions))
+    print("\nMean Recall= %f" % sp.mean(recalls))
+    print("Min Recall= %f" % min(recalls))
+    print("Max Recall %f" % max(recalls))
+    print("Variance= %f" % sp.var(recalls))
+    print("Standard Deviation= %f" % sp.std(recalls))
 
 
 def predict_adrs(q_mat, obj):
