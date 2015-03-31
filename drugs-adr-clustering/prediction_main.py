@@ -80,6 +80,7 @@ def main():
         
         if area > max_area:
             best_q_mat = q_mat
+            max_area = area
             matrix_df.iloc[train_index,:].index.values.tolist()
 
     print("Best area =",max_area)
