@@ -11,6 +11,7 @@ import latent_factors_utils as lf
 import pandas as pd
 import numpy as np
 import scipy as sp
+import scipy.io as spi
 import pylab as pl
 import datetime
 import time
@@ -53,6 +54,7 @@ def main():
 
     # retrieve the numpy matrix, drugs names and adrs names
     matrix = matrix_df.as_matrix()
+    spi.savemat('train_set.mat', {'matrix': matrix})
     drugs = matrix_df.index.values.tolist()
     adrs = matrix_df.columns.values.tolist()
 
