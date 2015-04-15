@@ -27,6 +27,11 @@ def main():
     if len(argv) > 1 and argv[1] == 'test':
         print("Running in test mode")
         testing = True
+    elif len(argv) > 1 and argv[1] == 'save':
+        print('Saving mat')
+        save_mat()
+    elif len(argv) > 1 and argv[1] == 'results':
+        print('Testing results')
     else:
         print("Running in normal mode")
 
@@ -45,12 +50,10 @@ def main():
         except FileNotFoundError:
             log('Dividing matrix in test and training sets')
             matrix_df, test_set = get_training_and_test_sets(matrix_df)
-            #pk.dump(matrix_df, open('data/training_set.p', 'wb'))
-            #pk.dump(test_set, open('data/test_set.p', 'wb'))
 
     # retrieve the numpy matrix, drugs names and adrs names
     matrix = matrix_df.as_matrix()
-    spi.savemat('train_set.mat', {'matrix': matrix})
+    
     drugs = matrix_df.index.values.tolist()
     adrs = matrix_df.columns.values.tolist()
 
@@ -76,6 +79,7 @@ def main():
 
         area,_,_ =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
         
+        # Maximizing area. It might be best to try and maximize precision and recal
         if area > max_area:
             best_q_mat = q_mat
             max_area = area
@@ -85,23 +89,21 @@ def main():
     log('Testing...')
     # test things out
     if testing:
-        #print("Before: ")
-        #test_latent_factors(v_mat, test_set)
-        #print("After: ")
-        #test_latent_factors(q_mat, test_set)
         _, threshold, predictions = test.test_roc(best_q_mat, test_set)
         test.precisionRecall(predictions, threshold, test_set)
 
-    # Return the matrixes with the corresponding indexes
-    #p_df = pd.DataFrame(p_mat, index=drugs)
-    #q_df = pd.DataFrame(q_mat.transpose(), index=adrs)
-
-    #pk.dump([p_df, q_df, s_array], open("data/final_product.p", 'wb'))
-
-    # tests a single drug, and prints info
-    #test_single()
-
     return p_mat, q_mat
+
+def save_mat():
+    try:
+        matrix_df = pd.read_pickle('data/training_set.p')
+        test_set = pd.read_pickle('data/test_set.p')
+    except FileNotFoundError:
+        log('Dividing matrix in test and training sets')
+        matrix_df, test_set = get_training_and_test_sets(matrix_df)
+
+    matrix = matrix_df.as_matrix()
+    spi.savemat('train_set.mat', {'matrix': matrix})
 
 def predict_adrs(q_mat, obj):
     """ predicts the adrs for a given drug """
