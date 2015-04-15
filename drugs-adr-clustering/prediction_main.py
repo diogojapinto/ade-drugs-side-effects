@@ -30,26 +30,19 @@ def main():
     elif len(argv) > 1 and argv[1] == 'save':
         print('Saving mat')
         save_mat()
+        return
     elif len(argv) > 1 and argv[1] == 'results':
         print('Testing results')
+        test_results()
+        return
     else:
         print("Running in normal mode")
 
-    try:
-        matrix_df = pd.read_pickle('data/bipartite_df.p')
-    except FileNotFoundError:
-        log('Fetching drug adr matrix')
-        matrix_df = ai.get_drug_adr_matrix()
-        pk.dump(matrix_df, open('data/bipartite_df.p', 'wb'))
+    matrix_df = drug_adr_matrix()
 
     # get the training and test sets
     if testing:
-        try:
-            matrix_df = pd.read_pickle('data/training_set.p')
-            test_set = pd.read_pickle('data/test_set.p')
-        except FileNotFoundError:
-            log('Dividing matrix in test and training sets')
-            matrix_df, test_set = get_training_and_test_sets(matrix_df)
+        matrix_df, test_set = train_and_test_set(matrix_df)
 
     # retrieve the numpy matrix, drugs names and adrs names
     matrix = matrix_df.as_matrix()
@@ -94,16 +87,54 @@ def main():
 
     return p_mat, q_mat
 
-def save_mat():
+def drug_adr_matrix():
     try:
-        matrix_df = pd.read_pickle('data/training_set.p')
+        matrix_df = pd.read_pickle('data/bipartite_df.p')
+    except FileNotFoundError:
+        log('Fetching drug adr matrix')
+        matrix_df = ai.get_drug_adr_matrix()
+        pk.dump(matrix_df, open('data/bipartite_df.p', 'wb'))
+
+    return matrix_df
+
+def train_and_test_set(matrix_df):
+    try:
+        train_set = pd.read_pickle('data/training_set.p')
         test_set = pd.read_pickle('data/test_set.p')
     except FileNotFoundError:
         log('Dividing matrix in test and training sets')
-        matrix_df, test_set = get_training_and_test_sets(matrix_df)
+        train_set, test_set = get_training_and_test_sets(matrix_df)
+        # Save test_set so it won't compromise future tests while using RMF
+        pk.dump(test_set, open('data/test_set.p', 'wb'))
 
-    matrix = matrix_df.as_matrix()
-    spi.savemat('train_set.mat', {'matrix': matrix})
+    return train_set, test_set
+
+def save_mat():
+    """ Saves training set in matlab format """
+
+    # Fetch training set
+    matrix_df = drug_adr_matrix()
+    train_set, _ = train_and_test_set(matrix_df)
+
+    # Save in a matlab readable format
+    matrix = train_set.as_matrix()
+    spi.savemat('data/train_set.mat', {'matrix': matrix})
+
+def test_results():
+    """ Reads matlab factorized matrix and tests it """
+
+    # Fetch test set
+    matrix_df = drug_adr_matrix()
+    _, test_set = train_and_test_set(matrix_df)
+
+    # Load matlab results
+    mat_contents = spi.loadmat('data/results.mat')
+    q_mat = mat_contents['q']
+
+    # Test the solution and print it to the user
+    _, threshold, predictions = test.test_roc(q_mat, test_set)
+    test.precisionRecall(predictions, threshold, test_set)
+
 
 def predict_adrs(q_mat, obj):
     """ predicts the adrs for a given drug """
