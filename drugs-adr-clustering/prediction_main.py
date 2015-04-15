@@ -83,7 +83,7 @@ def main():
     # test things out
     if testing:
         _, threshold, predictions = test.test_roc(best_q_mat, test_set)
-        test.precisionRecall(predictions, threshold, test_set)
+        test.precision_recall(predictions, threshold, test_set)
 
     return p_mat, q_mat
 
@@ -133,7 +133,7 @@ def test_results():
 
     # Test the solution and print it to the user
     _, threshold, predictions = test.test_roc(q_mat, test_set)
-    test.precisionRecall(predictions, threshold, test_set)
+    test.precision_recall(predictions, threshold, test_set)
 
 
 def predict_adrs(q_mat, obj):
