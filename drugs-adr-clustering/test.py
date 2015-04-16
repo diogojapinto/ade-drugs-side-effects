@@ -133,16 +133,16 @@ def precision_recall(predictions, threshold, test_set):
 
 def random_delete_adrs(drug):
     zeroed_elems_ratio = 1-MAX_TO_KEEP
-    candidates = obj > 0
+    candidates = drug > 0
 
     for index, elem in enumerate(candidates):
         if elem == False:
             continue
         prob = np.random.random_sample()
         if prob <= zeroed_elems_ratio:
-            obj[index] = 0
+            drug[index] = 0
 
-    return obj
+    return drug
     
 def print_stats(stats, stat_name):
     print("\nMean " + stat_name + "= %f" % sp.mean(stats))
