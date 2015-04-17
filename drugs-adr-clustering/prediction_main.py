@@ -17,6 +17,8 @@ import time
 from utils import get_training_and_test_sets
 from sys import argv
 from sklearn import cross_validation
+import matplotlib.pyplot as plt
+from operator import itemgetter
 
 def main():
     """ Entry function.
@@ -51,6 +53,7 @@ def main():
     adrs = matrix_df.columns.values.tolist()
 
     max_area = 0
+    recall_area = []
     kf=cross_validation.KFold(n=len(drugs), n_folds=10)
     for train_index, test_index in kf:
         log('Computing SVD')
@@ -70,13 +73,24 @@ def main():
         p_mat = p_mat.dot(np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))))
         q_mat = np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))).dot(q_mat)
 
-        area,_,_ =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
-        
+        area, threshold, predictions =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
+
+        # Save tuples for correlating area and recall
+        _, recall = test.precision_recall(predictions, threshold, test_set)
+        recall_area.append((recall, area))
+
         # Maximizing area. It might be best to try and maximize precision and recal
         if area > max_area:
             best_q_mat = q_mat
             max_area = area
             matrix_df.iloc[train_index,:].index.values.tolist()
+
+
+    # tmp
+    plt.plot(map(itemgetter(0), recall_area))
+    plt.plot(map(itemgetter(1), recall_area))
+    plt.show()
+    plt.savefig("labels_and_colors.png")
 
     print("Best area =",max_area)
     log('Testing...')

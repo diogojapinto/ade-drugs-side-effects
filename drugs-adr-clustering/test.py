@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import pylab as pl
+import random
+import latent_factors_utils as lf
 from constants import MAX_TO_KEEP, MIN_TO_KEEP, NR_ITERATIONS
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support
 
@@ -52,9 +54,9 @@ def test_single():
     print("Error: %f" % lf.compute_rmse(original_drug, drug_prediction))
 
     results_df = pd.DataFrame([original_drug, edited_drug, drug_prediction], 
-                                  index=['original', 'test', 'prediction'])
+                              index=['original', 'test', 'prediction'])
     print(results_df)
-    print(results_df.iloc[:, candidates])
+    # print(results_df.iloc[:, candidates])
 
     fpr, tpr, thresholds = roc_curve(original_drug, drug_prediction, pos_label = 5)
     roc_auc = auc(fpr,tpr)
@@ -133,16 +135,16 @@ def precision_recall(predictions, threshold, test_set):
 
 def random_delete_adrs(drug):
     zeroed_elems_ratio = 1-MAX_TO_KEEP
-    candidates = obj > 0
+    candidates = drug > 0
 
     for index, elem in enumerate(candidates):
         if elem == False:
             continue
         prob = np.random.random_sample()
         if prob <= zeroed_elems_ratio:
-            obj[index] = 0
+            drug[index] = 0
 
-    return obj
+    return drug
     
 def print_stats(stats, stat_name):
     print("\nMean " + stat_name + "= %f" % sp.mean(stats))
