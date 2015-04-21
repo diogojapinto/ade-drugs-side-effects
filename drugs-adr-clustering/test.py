@@ -63,7 +63,7 @@ def test_single():
     print("Area under the curve: %f" % roc_auc )
 
     # Plot ROC curve
-    plot_roc(roc_auc,drug_name)
+    plot_roc(roc_auc,drug_name, fpr, tpr)
 
 def test_roc(q_mat, test_set, plot=False):
     errors = []
@@ -101,7 +101,7 @@ def test_roc(q_mat, test_set, plot=False):
 
         # Plot ROC curve
         if(plot):
-            plot_roc(roc_auc, drug_names[r])
+            plot_roc(roc_auc, drug_names[r], fpr, tpr)
 
     print_stats(roc_areas, "Roc Area")
     print_stats(threshs, "Threshold")
@@ -153,7 +153,7 @@ def print_stats(stats, stat_name):
     print("Variance= %f" % sp.var(stats))
     print("Standard Deviation= %f" % sp.std(stats))
 
-def plot_roc(area, name):
+def plot_roc(area, name, fpr, tpr):
     pl.clf()
     pl.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % area)
     pl.plot([0, 1], [0, 1], 'k--')
