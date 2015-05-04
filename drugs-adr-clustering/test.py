@@ -30,7 +30,7 @@ def test_latent_factors(q_mat, test_set):
     print("REMOVED OBJECTS COUNT")
     print_stats(nr_elems_retracted, "Removed")
     print("ERRORS")
-    print_stats(errors,"Error")
+    print_stats(errors, "Error")
 
 def test_single():
     """ Tests a single random drug, printing the dataframe """
