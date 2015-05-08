@@ -43,19 +43,17 @@ def main():
     matrix_df = drug_adr_matrix()
 
     # get the training and test sets
-    if testing:
-        matrix_df, test_set = train_and_test_set(matrix_df)
+    matrix_df, test_set = train_and_test_set(matrix_df)
 
     # retrieve the numpy matrix, drugs names and adrs names
     matrix = matrix_df.as_matrix()
-    
     drugs = matrix_df.index.values.tolist()
     adrs = matrix_df.columns.values.tolist()
 
     max_area = 0
     recall_area = []
-    kf=cross_validation.KFold(n=len(drugs), n_folds=10)
-    for train_index, test_index in kf:
+    k_fold_nr = cross_validation.KFold(n=len(drugs), n_folds=10)
+    for train_index, test_index in k_fold_nr:
         log('Computing SVD')
         # compute the svd
         u_mat, s_array, v_mat = lf.compute_svd(matrix_df.iloc[train_index,:])
@@ -76,7 +74,7 @@ def main():
         area, threshold, predictions =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
 
         # Save tuples for correlating area and recall
-        _, recall = test.precision_recall(predictions, threshold, test_set)
+        _, recall = test.precision_recall(predictions, threshold, test_set) # LOOK HERE FOR test_set
         recall_area.append((recall, area))
 
         # Maximizing area. It might be best to try and maximize precision and recal
