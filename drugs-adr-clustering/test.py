@@ -70,6 +70,7 @@ def test_roc(q_mat, test_set, plot=False):
     nr_elems_retracted = []
     threshs = []
     predictions = []
+    masks = []
     roc_areas = []
 
     drug_names = test_set.index.tolist()
@@ -85,30 +86,38 @@ def test_roc(q_mat, test_set, plot=False):
         # Put some of them in 0
         obj = random_delete_adrs(obj)
 
+        mask = np.array([m==0 for m in obj.tolist()])
+        masks.append(mask)
+
         # Make the prediction
         drug_prediction = predict(obj,q_mat)
-        predictions.append(drug_prediction)
-
+        
+        
         # Create ROC curve
-        fpr, tpr, thresholds = roc_curve(original_obj, drug_prediction, pos_label = 5)
-        roc_auc = auc(fpr,tpr)
-        roc_areas.append(roc_auc)
+        fpr, tpr, thresholds = roc_curve(original_obj[mask], drug_prediction[mask], pos_label = 5)
+        
+        try:
+            roc_auc = auc(fpr,tpr)
+            roc_areas.append(roc_auc)
+            predictions.append(drug_prediction)
 
-        # Use youden index to calculate the optimal threshold
-        youden = tpr + (1-fpr)
-        maxIndex = np.where(youden == max(youden))
-        threshs.append(thresholds[maxIndex[0][0]])
+             # Use youden index to calculate the optimal threshold
+            youden = tpr + (1-fpr)
+            maxIndex = np.where(youden == max(youden))
+            threshs.append(thresholds[maxIndex[0][0]])
 
-        # Plot ROC curve
-        if(plot):
-            plot_roc(roc_auc, drug_names[r], fpr, tpr)
+            # Plot ROC curve
+            if(plot):
+                plot_roc(roc_auc, drug_names[r], fpr, tpr)
+        except ValueError:
+            print('Value error')
 
     print_stats(roc_areas, "Roc Area")
     print_stats(threshs, "Threshold")
 
-    return sp.mean(roc_areas), sp.mean(threshs), predictions
+    return sp.mean(roc_areas), sp.mean(threshs), predictions, masks
 
-def precision_recall(predictions, threshold, test_set):
+def precision_recall(predictions, threshold, test_set, masks):
 
     test_set = test_set.as_matrix()
 
@@ -116,7 +125,9 @@ def precision_recall(predictions, threshold, test_set):
     recalls = []
     for p in range(len(predictions)):
         original_obj = test_set[p]
+        original_obj = original_obj[masks[p]]
         pred = predictions[p].copy()
+        pred = pred[masks[p]]
 
         # Apply threshold to predictions
         idx = pred >= threshold
@@ -166,6 +177,7 @@ def plot_roc(area, name, fpr, tpr):
     pl.savefig('data/roc/' + name)    
 
 def predict(obj, q_mat):
+
     obj_factors = obj.dot(q_mat.transpose())
     drug_prediction = obj_factors.dot(q_mat)
 
