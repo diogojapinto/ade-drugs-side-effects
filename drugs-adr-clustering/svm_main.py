@@ -12,14 +12,14 @@ def export_matrices_in_csv():
     """ Exports the original matrix and one with missing values to CSV files """
 
     matrix_df = pd.read_pickle('data/bipartite_df.p')
-
     matrix = matrix_df.as_matrix()
+    matrix = matrix.astype(int)
 
-    np.savetxt('original.csv', matrix, delimiter=',')
+    np.savetxt('data/original.csv', matrix, delimiter=',', fmt='%i')
 
     add_missing_values(matrix)
 
-    np.savetxt('with-mv.csv', matrix, delimiter=',')
+    np.savetxt('data/with-mv.csv', matrix, delimiter=',', fmt='%i')
 
 
 def add_missing_values(matrix):
@@ -34,9 +34,9 @@ def add_missing_values(matrix):
 
             sample = rd.random()
             if sample > MV_RATIO:
-                mask[j] = True
+                mask[j] = False
 
-    matrix[:, mask] = 0
+        matrix[i, mask] = 0
 
 
 if __name__ == '__main__':

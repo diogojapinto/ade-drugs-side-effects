@@ -1,4 +1,4 @@
-"""
+gi"""
     Module that retrieves, cleans and merges the molecular descriptors for drugs with the ADRs
 """
 
