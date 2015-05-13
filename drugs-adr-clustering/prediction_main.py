@@ -47,13 +47,23 @@ def main():
 
     # retrieve the numpy matrix, drugs names and adrs names
     matrix = matrix_df.as_matrix()
-    drugs = matrix_df.index.values.tolist()
-    adrs = matrix_df.columns.values.tolist()
 
+    best_q_mat, best_threshold = train_model(matrix_df, testing)
+
+    log('Testing...')
+    # test things out
+    if testing:
+        _, threshold, predictions, masks = test.test_roc(best_q_mat, test_set)
+        test.precision_recall(predictions, best_threshold, test_set, masks)
+
+    #return p_mat, q_mat
+
+
+def train_model(matrix_df, testing):
     max_area = 0
-    recall_area = []
-    k_fold_nr = cross_validation.KFold(n=len(drugs), n_folds=10)
-    for train_index, test_index in k_fold_nr:
+    best_threshold = -1
+    kf=cross_validation.KFold(n=matrix_df.as_matrix().shape[0], n_folds=10)
+    for train_index, test_index in kf:
         log('Computing SVD')
         # compute the svd
         u_mat, s_array, v_mat = lf.compute_svd(matrix_df.iloc[train_index,:])
@@ -71,33 +81,17 @@ def main():
         p_mat = p_mat.dot(np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))))
         q_mat = np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))).dot(q_mat)
 
-        area, threshold, predictions =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
-
-        # Save tuples for correlating area and recall
-        _, recall = test.precision_recall(predictions, threshold, test_set) # LOOK HERE FOR test_set
-        recall_area.append((recall, area))
+        log('Testing')
+        area, threshold, _, _ =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
 
         # Maximizing area. It might be best to try and maximize precision and recal
         if area > max_area:
             best_q_mat = q_mat
             max_area = area
+            best_threshold = threshold
             matrix_df.iloc[train_index,:].index.values.tolist()
 
-
-    # tmp
-    plt.plot(map(itemgetter(0), recall_area))
-    plt.plot(map(itemgetter(1), recall_area))
-    plt.show()
-    plt.savefig("labels_and_colors.png")
-
-    print("Best area =",max_area)
-    log('Testing...')
-    # test things out
-    if testing:
-        _, threshold, predictions = test.test_roc(best_q_mat, test_set)
-        test.precision_recall(predictions, threshold, test_set)
-
-    return p_mat, q_mat
+    return best_q_mat, best_threshold
 
 def drug_adr_matrix():
     try:
