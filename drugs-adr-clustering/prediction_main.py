@@ -42,23 +42,28 @@ def main():
 
     matrix_df = drug_adr_matrix()
 
-    print(matrix_df.shape)
-    print(np.sum(np.sum(matrix_df).values.tolist()) / 5)
-
     # get the training and test sets
     if testing:
         matrix_df, test_set = train_and_test_set(matrix_df)
 
     # retrieve the numpy matrix, drugs names and adrs names
     matrix = matrix_df.as_matrix()
-    
-    drugs = matrix_df.index.values.tolist()
-    adrs = matrix_df.columns.values.tolist()
 
+    best_q_mat, best_threshold = train_model(matrix_df, testing)
+
+    log('Testing...')
+    # test things out
+    if testing:
+        _, threshold, predictions, masks = test.test_roc(best_q_mat, test_set)
+        test.precision_recall(predictions, best_threshold, test_set, masks)
+
+    #return p_mat, q_mat
+
+
+def train_model(matrix_df, testing):
     max_area = 0
     best_threshold = -1
-    recall_area = []
-    kf=cross_validation.KFold(n=len(drugs), n_folds=10)
+    kf=cross_validation.KFold(n=matrix_df.as_matrix().shape[0], n_folds=10)
     for train_index, test_index in kf:
         log('Computing SVD')
         # compute the svd
@@ -71,18 +76,14 @@ def main():
         log('Applying gradient descent')
         # scale the matrixes and perform gradient desc«ent on it
         p_mat, q_mat = lf.get_scaled_matrices(u_mat, s_array, v_mat)
-        #p_mat, q_mat = lf.gradient_descent(matrix_df.iloc[train_index,:].as_matrix(), p_mat, q_mat, testing, 200)
+        p_mat, q_mat = lf.gradient_descent(matrix_df.iloc[train_index,:].as_matrix(), p_mat, q_mat, testing, 200)
 
         # Normalize
-        #p_mat = p_mat.dot(np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))))
-        #q_mat = np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))).dot(q_mat)
+        p_mat = p_mat.dot(np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))))
+        q_mat = np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))).dot(q_mat)
 
         log('Testing')
-        area, threshold, predictions, mask =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
-
-        # Save tuples for correlating area and recall
-        _, recall = test.precision_recall(predictions, threshold, test_set, mask)
-        recall_area.append((recall, area))
+        area, threshold, _, _ =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
 
         # Maximizing area. It might be best to try and maximize precision and recal
         if area > max_area:
@@ -91,21 +92,7 @@ def main():
             best_threshold = threshold
             matrix_df.iloc[train_index,:].index.values.tolist()
 
-
-    # tmp
-    '''plt.plot(map(itemgetter(0), recall_area))
-    plt.plot(map(itemgetter(1), recall_area))
-    plt.show()
-    plt.savefig("labels_and_colors.png")'''
-
-    print("Best area =",max_area)
-    log('Testing...')
-    # test things out
-    if testing:
-        _, threshold, predictions, masks = test.test_roc(best_q_mat, test_set)
-        test.precision_recall(predictions, best_threshold, test_set, masks)
-
-    return p_mat, q_mat
+    return best_q_mat, best_threshold
 
 def drug_adr_matrix():
     try:

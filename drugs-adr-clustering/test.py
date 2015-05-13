@@ -66,6 +66,7 @@ def test_single():
     plot_roc(roc_auc,drug_name, fpr, tpr)
 
 def test_roc(q_mat, test_set, plot=False):
+
     errors = []
     nr_elems_retracted = []
     threshs = []
@@ -86,7 +87,8 @@ def test_roc(q_mat, test_set, plot=False):
         # Put some of them in 0
         obj = random_delete_adrs(obj)
 
-        mask = np.array([m==0 for m in obj.tolist()])
+        #mask = np.array([m==0 for m in obj.tolist()])
+        mask = np.array([True for m in obj.tolist()])
         masks.append(mask)
 
         # Make the prediction
@@ -101,7 +103,7 @@ def test_roc(q_mat, test_set, plot=False):
             roc_areas.append(roc_auc)
             predictions.append(drug_prediction)
 
-             # Use youden index to calculate the optimal threshold
+            # Use youden index to calculate the optimal threshold
             youden = tpr + (1-fpr)
             maxIndex = np.where(youden == max(youden))
             threshs.append(thresholds[maxIndex[0][0]])
