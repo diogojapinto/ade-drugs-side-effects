@@ -8,6 +8,7 @@ import mysql.connector as mysql
 import os
 import re
 import pandas as pd
+import numpy as np
 
 def main():
     """ Main function here """
@@ -29,6 +30,7 @@ def main():
                     indications_parser]
 
     data_root = './data'
+    file_count = 0
 
     for quarter_folder in os.listdir(data_root): 
         is_new_model = False
@@ -37,54 +39,83 @@ def main():
         if match:
             is_new_model = True
 
-        files_dir = data_root + '/' + quarter_folder 
+        files_dir = data_root + '/' + quarter_folder + '/' + 'ascii'
 
         for in_file in os.listdir(files_dir):
             for pattern, parser in zip(file_patterns, file_parsers):
                 match = re.match(pattern, in_file)
                 if match:
                     file_path = files_dir + '/' + in_file
+                    print("Processing " + in_file)
                     parser(file_path, is_new_model)
+                    file_count += 1
+
+    print("Files count: " + str(file_count))
 
 def demographic_parser(filepath, is_new_model):
     """ Parses and inserts the data from the demographic FAERS files """
     if is_new_model:
-        generic_parser(filepath)
 
-def drugs_parser(filepath, is_new):
+        dates = ['event_dt', 'mfr_dt', 'init_fda_dt', 'fda_dt', 'rept_dt']
+
+        dtypes = {'primaryid': np.int64,
+                  'caseid': np.int64,
+                  'caseversion': np.str,
+                  'i_f_code': np.str,
+                  'rept_cod': np.str,
+                  'mfr_num': np.str,
+                  'mfr_sndr': np.str,
+                  #'age': np.int64,
+                  'age_cod': np.str,
+                  'gndr_cod': np.str,
+                  'e_sub': np.str,
+                  #'wt': np.float64,
+                  'wt_cod': np.str,
+                  'to_mfr': np.str,
+                  'occp_cod': np.str,
+                  'reporter_country': np.str,
+                  'occr_country': np.str}
+
+        generic_parser(filepath, 'event', dates, dtypes)
+
+def drugs_parser(filepath, is_new_model):
     """ Parses and inserts the data from the drugs FAERS files """
-    if is_new_model:
-        generic_parser(filepath)
+    #if is_new_model:
+    #    generic_parser(filepath)
 
-def reactions_parser(filepath, is_new):
+def reactions_parser(filepath, is_new_model):
     """ Parses and inserts the data from the reactions FAERS files """
-    if is_new_model:
-        generic_parser(filepath)
+    #if is_new_model:
+    #    generic_parser(filepath)
 
-def outcomes_parser(filepath, is_new):
+def outcomes_parser(filepath, is_new_model):
     """ Parses and inserts the data from the outcomes FAERS files """
-    if is_new_model:
-        generic_parser(filepath)
+    #if is_new_model:
+    #    generic_parser(filepath)
 
-def report_sources_parser(filepath, is_new):
+def report_sources_parser(filepath, is_new_model):
     """ Parses and inserts the data from the report sources FAERS files """
-    if is_new_model:
-        generic_parser(filepath)
+    #if is_new_model:
+    #    generic_parser(filepath)
 
-def therapy_parser(filepath, is_new):
+def therapy_parser(filepath, is_new_model):
     """ Parses and inserts the data from the therapy FAERS files """
-    if is_new_model:
-        generic_parser(filepath)
+    #if is_new_model:
+    #    generic_parser(filepath)
     
-def indications_parser(filepath, is_new):
+def indications_parser(filepath, is_new_model):
     """ Parses and inserts the data from the indications FAERS files """
-    if is_new_model:
-        generic_parser(filepath)
+    #if is_new_model:
+    #    generic_parser(filepath)
 
-def generic_parser(filepath):
-    data_frame = pd.read_csv(filepath, header=0, sep='$')
-    cnx = mysql.connect(user='dpinto', password='dpinto', host='porto.fe.up.pt', database='medline')
-    data_frame.to_sql(con=cnx, name='event', if_exists='replace', flavor='mysql')
+def generic_parser(filepath, table, dates, dtypes):
+    """ Directly dumps a dataframe on a mySQL database """
+
+
+    data_frame = pd.read_csv(filepath, header=0, sep='$', na_values=[''], keep_default_na=False, parse_dates=dates, dtype=dtypes)
+
+    cnx = mysql.connect(user='dpinto', password='dpinto', host='porto.fe.up.pt', database='faers')
+    data_frame.to_sql(con=cnx, name=table, if_exists='append', flavor='mysql')
     cnx.close()
 
 if __name__ == '__main__':

@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS event_indications;
+DROP TABLE IF EXISTS event_therapy;
+DROP TABLE IF EXISTS event_report_sources;
 DROP TABLE IF EXISTS event_outcomes;
 DROP TABLE IF EXISTS event_reactions;
 DROP TABLE IF EXISTS event_drugs;
@@ -7,7 +10,7 @@ DROP TABLE IF EXISTS event;
 CREATE TABLE event (
 	event_id			INTEGER NOT NULL,
 	case_id				INTEGER NOT NULL,
-	case_version		VARCHAR(100)
+	case_version		VARCHAR(100),
 	i_f_cod				CHAR(1),
 	event_dt 			DATE,
 	mfr_dt				DATE,
@@ -18,12 +21,12 @@ CREATE TABLE event (
 	mfr_num				INTEGER,
 	mfr_sndr			VARCHAR(100),
 	lift_ref			VARCHAR(500),
-	patient_age 		INTEGER,
+	age 				INTEGER,
 	age_cod				CHAR(3),
 	age_grp				CHAR(1),
 	sex					CHAR(1),
 	e_sub				CHAR(1),
-	wt					INTEGER,
+	wt					FLOAT,
 	wt_cod				CHAR(3),
 	rept_dt				DATE,
 	to_mfr				BOOLEAN,
@@ -39,7 +42,7 @@ ALTER TABLE event
 CREATE TABLE event_drugs (
 	event_id			INTEGER NOT NULL,
 	case_id				INTEGER NOT NULL,
-	drug_seq			NUMBER NOT NULL,
+	drug_seq			INTEGER NOT NULL,
 	role_cod			CHAR(2),
 	drug_name			VARCHAR(100),
 	prod_ai				VARCHAR(100),
