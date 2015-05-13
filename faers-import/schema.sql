@@ -8,10 +8,10 @@ DROP TABLE IF EXISTS event;
 
 
 CREATE TABLE event (
-	event_id			INTEGER NOT NULL,
-	case_id				INTEGER NOT NULL,
-	case_version		VARCHAR(100),
-	i_f_cod				CHAR(1),
+	primaryid			INTEGER NOT NULL,
+	caseid				INTEGER NOT NULL,
+	caseversion			VARCHAR(100),
+	i_f_code			CHAR(1),
 	event_dt 			DATE,
 	mfr_dt				DATE,
 	init_fda_dt			DATE,
@@ -20,7 +20,7 @@ CREATE TABLE event (
 	auth_num			INTEGER,
 	mfr_num				INTEGER,
 	mfr_sndr			VARCHAR(100),
-	lift_ref			VARCHAR(500),
+	lit_ref				VARCHAR(500),
 	age 				INTEGER,
 	age_cod				CHAR(3),
 	age_grp				CHAR(1),
@@ -34,14 +34,14 @@ CREATE TABLE event (
 	reporter_country	CHAR(2),
 	occr_country		CHAR(2)
 );
-CREATE UNIQUE INDEX pk_faers_event ON event(event_id);
+CREATE UNIQUE INDEX pk_faers_event ON event(primaryid);
 ALTER TABLE event
-	ADD CONSTRAINT pk_faers_event PRIMARY KEY (event_id);
+	ADD CONSTRAINT pk_faers_event PRIMARY KEY (primaryid);
 
 
 CREATE TABLE event_drugs (
-	event_id			INTEGER NOT NULL,
-	case_id				INTEGER NOT NULL,
+	primaryid			INTEGER NOT NULL,
+	caseid				INTEGER NOT NULL,
 	drug_seq			INTEGER NOT NULL,
 	role_cod			CHAR(2),
 	drug_name			VARCHAR(100),
@@ -61,31 +61,31 @@ CREATE TABLE event_drugs (
 	dose_form			VARCHAR(50),
 	dose_freq			CHAR(3)
 );
-CREATE INDEX idx_event_drugs_event_id ON event_drugs(event_id);
+CREATE INDEX idx_event_drugs_primaryid ON event_drugs(primaryid);
 ALTER TABLE event_drugs
 	ADD CONSTRAINT fk_event_drugs
-		FOREIGN KEY event_drugs(event_id)
-			REFERENCES event(event_id);
+		FOREIGN KEY event_drugs(primaryid)
+			REFERENCES event(primaryid);
 ALTER TABLE event_drugs
 	ADD CONSTRAINT fk_event_drugs
-		UNIQUE event_drugs(case_id, drug_seq);
+		UNIQUE event_drugs(caseid, drug_seq);
 
 CREATE TABLE event_reactions (
-	event_id			INTEGER NOT NULL,
-	case_id				INTEGER NOT NULL,
+	primaryid			INTEGER NOT NULL,
+	caseid				INTEGER NOT NULL,
 	medra_pt 			VARCHAR(500),
 	drug_rec_act		VARCHAR(500)
 );
-CREATE INDEX idx_event_reactions_event_id ON event_reactions(event_id);
+CREATE INDEX idx_event_reactions_primaryid ON event_reactions(primaryid);
 ALTER TABLE event_reactions
 	ADD CONSTRAINT fk_event_reactions
-		FOREIGN KEY event_reactions(event_id)
-			REFERENCES event(event_id);
+		FOREIGN KEY event_reactions(primaryid)
+			REFERENCES event(primaryid);
 
 
 CREATE TABLE event_outcomes (
-	event_id			INTEGER NOT NULL,
-	case_id				INTEGER NOT NULL,
+	primaryid			INTEGER NOT NULL,
+	caseid				INTEGER NOT NULL,
 	outc_cod			CHAR(2)
 		-- DE -> Death
 		-- LT -> Life-Threatening
@@ -95,53 +95,53 @@ CREATE TABLE event_outcomes (
 		-- RI -> Required Intervention to Prevent Permanent Impairment/Damage
 		-- OT -> Other Serious (Important Medical Event)
 );
-CREATE INDEX idx_event_outcomes_event_id ON event_outcomes(event_id);
+CREATE INDEX idx_event_outcomes_primaryid ON event_outcomes(primaryid);
 ALTER TABLE event_outcomes
 	ADD CONSTRAINT fk_event_outcomes
-		FOREIGN KEY event_outcomes(event_id)
-			REFERENCES event(event_id);
+		FOREIGN KEY event_outcomes(primaryid)
+			REFERENCES event(primaryid);
 
 
 CREATE TABLE event_report_sources (
-	event_id			INTEGER NOT NULL,
-	case_id				INTEGER NOT NULL,
+	primaryid			INTEGER NOT NULL,
+	caseid				INTEGER NOT NULL,
 	rpsr_cod			CHAR(3)
 );
-CREATE INDEX idx_event_report_sources_event_id ON event_report_sources(event_id);
+CREATE INDEX idx_event_report_sources_primaryid ON event_report_sources(primaryid);
 ALTER TABLE event_report_sources
 	ADD CONSTRAINT fk_event_report_sources
-		FOREIGN KEY event_report_sources(event_id)
-			REFERENCES event(event_id);
+		FOREIGN KEY event_report_sources(primaryid)
+			REFERENCES event(primaryid);
 
 CREATE TABLE event_therapy (
-	event_id			INTEGER NOT NULL,
-	case_id				INTEGER NOT NULL,
+	primaryid			INTEGER NOT NULL,
+	caseid				INTEGER NOT NULL,
 	dsg_drug_seq		INTEGER NOT NULL,
 	start_dt			DATE,
 	end_dt				DATE,
 	dur 				INTEGER,
 	dur_cod				CHAR(3)
 );
-CREATE INDEX idx_event_therapy_event_id ON event_therapy(event_id);
+CREATE INDEX idx_event_therapy_primaryid ON event_therapy(primaryid);
 ALTER TABLE event_therapy
 	ADD CONSTRAINT fk_event_therapy
-		FOREIGN KEY event_therapy(event_id)
-			REFERENCES event(event_id);
+		FOREIGN KEY event_therapy(primaryid)
+			REFERENCES event(primaryid);
 ALTER TABLE event_therapy
 	ADD CONSTRAINT fk_event_therapy
-		UNIQUE event_therapy(case_id, dsg_drug_seq);
+		UNIQUE event_therapy(caseid, dsg_drug_seq);
 
 CREATE TABLE event_indications (
-	event_id			INTEGER NOT NULL,
-	case_id 			INTEGER NOT NULL,
+	primaryid			INTEGER NOT NULL,
+	caseid 			INTEGER NOT NULL,
 	indi_drug_seq		INTEGER NOT NULL,
 	medra_indi_pt		VARCHAR(500)
 );
-CREATE INDEX idx_event_indications_event_id ON event_indications(event_id);
+CREATE INDEX idx_event_indications_primaryid ON event_indications(primaryid);
 ALTER TABLE event_indications
 	ADD CONSTRAINT fk_event_indications
-		FOREIGN KEY event_indications(event_id)
-			REFERENCES event(event_id);
+		FOREIGN KEY event_indications(primaryid)
+			REFERENCES event(primaryid);
 ALTER TABLE event_indications
 	ADD CONSTRAINT fk_event_indications
-		UNIQUE event_indications(case_id, indi_drug_seq);
+		UNIQUE event_indications(caseid, indi_drug_seq);

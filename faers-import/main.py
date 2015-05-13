@@ -76,7 +76,12 @@ def demographic_parser(filepath, is_new_model):
                   'reporter_country': np.str,
                   'occr_country': np.str}
 
-        generic_parser(filepath, 'event', dates, dtypes)
+        data_frame = pd.read_csv(filepath, header=0, sep='$')
+
+        if 'gndr_cod' in data_frame.columns:
+            data_frame.rename(columns={'gndr_cod':'sex'}, inplace=True)
+
+        generic_parser(filepath, 'event', data_frame)
 
 def drugs_parser(filepath, is_new_model):
     """ Parses and inserts the data from the drugs FAERS files """
@@ -108,14 +113,24 @@ def indications_parser(filepath, is_new_model):
     #if is_new_model:
     #    generic_parser(filepath)
 
-def generic_parser(filepath, table, dates, dtypes):
+def generic_parser(filepath, table, data_frame):
     """ Directly dumps a dataframe on a mySQL database """
 
-
-    data_frame = pd.read_csv(filepath, header=0, sep='$', na_values=[''], keep_default_na=False, parse_dates=dates, dtype=dtypes)
-
     cnx = mysql.connect(user='dpinto', password='dpinto', host='porto.fe.up.pt', database='faers')
-    data_frame.to_sql(con=cnx, name=table, if_exists='append', flavor='mysql')
+    cur = cnx.cursor()
+
+    names = list(data_frame.columns.values)
+    bracketed_names = ['`' + column + '`' for column in names]
+    col_names = ','.join(bracketed_names)
+    wildcards = ','.join([r'%s'] * len(names))
+    insert_query = "REPLACE INTO %s (%s) VALUES (%s)" % (
+        table, col_names, wildcards)
+
+    data_frame = data_frame.where((pd.notnull(data_frame)), None)
+
+    cur.executemany(insert_query, data_frame.values.tolist())
+    cnx.commit()
+    cur.close()
     cnx.close()
 
 if __name__ == '__main__':
