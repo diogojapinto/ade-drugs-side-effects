@@ -60,23 +60,25 @@ def reduce_singular_values(u_mat, s_array, v_mat):
     v_mat = v_mat.copy()
 
     base_energy = sum([x ** 2 for x in s_array])
+    new_energy = base_energy
 
     while True:
         # s_array is ordered in descending order
         min_index = len(s_array)-1
 
         min_val = s_array[min_index]
-        new_energy = sum([x ** 2 for x in s_array]) - min_val ** 2
+
+        new_energy = new_energy - min_val ** 2
 
         if new_energy < base_energy * ENERGY_TO_RETAIN:
             break
 
         # else delete the corresponding rows and columns
-        s_array = np.delete(s_array, min_index)
-        u_mat = np.delete(u_mat, min_index, 1)
-        v_mat = np.delete(v_mat, min_index, 0)
+        s_array = s_array[:min_index]
+        u_mat = u_mat[:,:min_index]
+        v_mat = v_mat[:min_index,:]
 
-    save_to_file(u_mat, s_array, v_mat, REDUCED_ID)
+    #save_to_file(u_mat, s_array, v_mat, REDUCED_ID)
 
     return u_mat, s_array, v_mat
 
