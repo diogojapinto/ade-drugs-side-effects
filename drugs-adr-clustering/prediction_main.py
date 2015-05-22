@@ -19,6 +19,7 @@ from sys import argv
 from sklearn import cross_validation
 import matplotlib.pyplot as plt
 from operator import itemgetter
+from descriptors_cleaner import append_descriptors
 
 def main():
     """ Entry function.
@@ -41,14 +42,17 @@ def main():
         print("Running in normal mode")
 
     matrix_df = get_drug_adr_matrix()
+    drugs = matrix_df.index.values.tolist()
+    adrs = matrix_df.columns.values.tolist()
+
+    # append descriptors
+    matrix_df = append_descriptors(matrix_df)
 
     # get the training and test sets
     matrix_df, test_set = train_and_test_set(matrix_df)
 
-    # retrieve the numpy matrix, drugs names and adrs names
+    # retrieve the numpy matrix
     matrix = matrix_df.as_matrix()
-    drugs = matrix_df.index.values.tolist()
-    adrs = matrix_df.columns.values.tolist()
 
     max_area = 0
     recall_area = []
@@ -105,7 +109,6 @@ def get_drug_adr_matrix():
     except FileNotFoundError:
         log('Fetching drug adr matrix')
         matrix_df = ai.get_drug_adr_matrix()
-
 
         # rename the indices
         drugs = matrix_df.index.values.tolist()

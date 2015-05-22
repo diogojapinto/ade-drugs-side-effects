@@ -5,6 +5,7 @@
 import mysql.connector as mysql
 import graph_builder as gb
 import pandas as pd
+import pickle as pk
 
 
 def get_connection():
@@ -26,9 +27,9 @@ def get_adr_name(ident):
     
     cnx = get_connection()
     cursor = cnx.cursor()
-    cursor.execute(query, ident)
+    cursor.execute(query, (ident,))
 
-    term = cursor.fetchone()['adr.term']
+    term = cursor.fetchone()[0]
 
     cursor.close()
     close_connection(cnx)
@@ -44,7 +45,7 @@ def get_drug_name(ident):
     
     cnx = get_connection()
     cursor = cnx.cursor()
-    cursor.execute(query, ident)
+    cursor.execute(query, (ident,))
 
     term = cursor.fetchone()[0]
 
