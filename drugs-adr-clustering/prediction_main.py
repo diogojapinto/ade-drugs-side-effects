@@ -40,7 +40,7 @@ def main():
     else:
         print("Running in normal mode")
 
-    matrix_df = drug_adr_matrix()
+    matrix_df = get_drug_adr_matrix()
 
     # get the training and test sets
     matrix_df, test_set = train_and_test_set(matrix_df)
@@ -99,12 +99,22 @@ def main():
 
     return p_mat, q_mat
 
-def drug_adr_matrix():
+def get_drug_adr_matrix():
     try:
         matrix_df = pd.read_pickle('data/bipartite_df.p')
     except FileNotFoundError:
         log('Fetching drug adr matrix')
         matrix_df = ai.get_drug_adr_matrix()
+
+
+        # rename the indices
+        drugs = matrix_df.index.values.tolist()
+        adrs = matrix_df.columns.values.tolist()
+
+        drug_names_dict = {x: ai.get_drug_name(x) for x in drugs}
+        adr_names_dict = {x: ai.get_adr_name(x) for x in adrs}
+        matrix_df.rename(index=drug_names_dict, columns=adr_names_dict)
+
         pk.dump(matrix_df, open('data/bipartite_df.p', 'wb'))
 
     return matrix_df
