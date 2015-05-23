@@ -4,8 +4,7 @@
 
 import pandas as pd
 import numpy as np
-import adrecs_interface as ai
-import pickle as pk
+from sklearn import preprocessing
 
 def append_descriptors(drugs_df):
     """ First just some tests """
@@ -15,6 +14,15 @@ def append_descriptors(drugs_df):
     descriptors_df.dropna(axis=0, inplace=True)
 
     descriptors_df = descriptors_df.groupby(level=0).aggregate(np.mean)
+
+    # scale everything
+    values = descriptors_df.values
+    drugs_names = descriptors_df.index.values
+    descriptors_names = descriptors_df.columns.values
+
+    min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0,5))
+    scaled_values = min_max_scaler.fit_transform(values)
+    descriptors_df = pd.DataFrame(scaled_values, index=drugs_names, columns=descriptors_names)
 
     # join
     result_df = drugs_df.join(descriptors_df, how='inner')
