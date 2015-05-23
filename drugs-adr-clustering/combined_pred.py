@@ -21,7 +21,7 @@ def main():
     matrix, test_set = cross_validation.train_test_split(matrix, test_size=0.3)
     matrix, validation_set = cross_validation.train_test_split(matrix, test_size=0.01)
 
-    best_q_mat, best_threshold = pm.train_model(matrix_df, True)
+    best_q_mat, best_threshold = pm.train_model(matrix_df, True, len(adrs))
     rbm = rpred.create_model(matrix, hidden=2000, epochs=300)
 
     # Points to combine the two methods

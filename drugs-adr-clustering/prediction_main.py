@@ -54,18 +54,18 @@ def main():
     # retrieve the numpy matrix
     matrix = matrix_df.as_matrix()
 
-    best_q_mat, best_threshold = train_model(matrix_df, testing)
+    best_q_mat, best_threshold = train_model(matrix_df, testing, len(adrs))
 
     log('Testing...')
     # test things out
     if testing:
-        _, threshold, predictions, masks = test.test_roc(best_q_mat, test_set)
+        _, threshold, predictions, masks = test.test_roc(best_q_mat, test_set, len(adrs))
         test.precision_recall(predictions, best_threshold, test_set, masks)
 
     #return p_mat, q_mat
 
 
-def train_model(matrix_df, testing):
+def train_model(matrix_df, testing, adrs_cols_count):
     max_area = 0
     best_threshold = -1
     kf=cross_validation.KFold(n=matrix_df.as_matrix().shape[0], n_folds=10)
@@ -88,7 +88,7 @@ def train_model(matrix_df, testing):
         q_mat = np.linalg.inv(lf.get_s_matrix(np.sqrt(s_array))).dot(q_mat)
 
         log('Testing')
-        area, threshold, _, _ =test.test_roc(q_mat, matrix_df.iloc[test_index,:])
+        area, threshold, _, _ = test.test_roc(q_mat, matrix_df.iloc[test_index,:], adrs_cols_count)
 
         # Maximizing area. It might be best to try and maximize precision and recal
         if area > max_area:

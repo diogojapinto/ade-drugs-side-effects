@@ -65,7 +65,7 @@ def test_single():
     # Plot ROC curve
     plot_roc(roc_auc,drug_name, fpr, tpr)
 
-def test_roc(q_mat, test_set, plot=False):
+def test_roc(q_mat, test_set, adrs_cols_count, plot=False):
 
     errors = []
     nr_elems_retracted = []
