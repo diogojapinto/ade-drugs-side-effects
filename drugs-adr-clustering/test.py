@@ -4,8 +4,11 @@ import scipy as sp
 import pylab as pl
 import random
 import latent_factors_utils as lf
-from constants import MAX_TO_KEEP, MIN_TO_KEEP, NR_ITERATIONS
+import constants as const
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support
+
+def pr():
+    print("Max=",const.MAX_TO_KEEP)
 
 def test_latent_factors(q_mat, test_set):
     """ Computes the average error of the obtained latent factors model
@@ -14,7 +17,7 @@ def test_latent_factors(q_mat, test_set):
     nr_elems_retracted = []
     test_set = test_set.as_matrix()
 
-    for _ in range(NR_ITERATIONS):
+    for _ in range(const.NR_ITERATIONS):
         nr_elems_retracted.append(0)
         line_i = np.random.randint(0, len(test_set))
         original_obj = test_set[line_i]
@@ -76,7 +79,6 @@ def test_roc(q_mat, test_set, adrs_cols_count, plot=False):
 
     drug_names = test_set.index.tolist()
     test_set = test_set.as_matrix()
-    rows, cols = test_set.shape
 
     for r in range(len(test_set)):
 
@@ -85,10 +87,10 @@ def test_roc(q_mat, test_set, adrs_cols_count, plot=False):
         obj = original_obj.copy()
 
         # Put some of them in 0
-        obj = random_delete_adrs(obj)
+        obj = random_delete_adrs(obj, adrs_cols_count)
 
         #mask = np.array([m==0 for m in obj.tolist()])
-        mask = np.array([True for m in obj.tolist()])
+        mask = np.array([idx < adrs_cols_count for idx, m in enumerate(obj.tolist())])
         masks.append(mask)
 
         # Make the prediction
@@ -146,9 +148,9 @@ def precision_recall(predictions, threshold, test_set, masks):
 
     return sp.mean(precisions), sp.mean(recalls)
 
-def random_delete_adrs(drug):
-    zeroed_elems_ratio = 1-MAX_TO_KEEP
-    candidates = drug > 0
+def random_delete_adrs(drug, adrs_cols_count):
+    zeroed_elems_ratio = 1-const.MAX_TO_KEEP
+    candidates = drug[0:adrs_cols_count] > 0
 
     for index, elem in enumerate(candidates):
         if elem == False:

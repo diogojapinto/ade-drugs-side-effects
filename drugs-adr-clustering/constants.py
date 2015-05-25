@@ -22,4 +22,4 @@ REGULARIZATION_PARAM = 0.5  # trading of between predicted performance on the mo
 ## Testing related:
 NR_ITERATIONS = 1000
 MIN_TO_KEEP = 0.3
-MAX_TO_KEEP = 0.7
+global MAX_TO_KEEP

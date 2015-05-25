@@ -3,12 +3,16 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import pickle as pk
+import prediction_main as pm
 import rbm
 import datetime
 import time
+import test 
 from utils import get_training_and_test_sets
+from sklearn import cross_validation
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support
-from constants import MAX_TO_KEEP
+import constants as const
+from descriptors_cleaner import append_descriptors
 
 def drug_adr_matrix():
     try:
@@ -54,7 +58,7 @@ def print_stats(stats, stat_name):
     print("Standard Deviation= %f" % sp.std(stats))
 
 def random_delete_adrs(drug):
-    zeroed_elems_ratio = 1-MAX_TO_KEEP
+    zeroed_elems_ratio = 1-const.MAX_TO_KEEP
     candidates = drug > 0
 
     for index, elem in enumerate(candidates):
@@ -67,9 +71,6 @@ def random_delete_adrs(drug):
     return drug
 
 def precision_recall(predictions, threshold, test_set):
-
-    test_set = test_set.as_matrix()
-
     precisions = []
     recalls = []
     for p in range(len(predictions)):
@@ -78,11 +79,11 @@ def precision_recall(predictions, threshold, test_set):
 
         # Apply threshold to predictions
         idx = pred >= threshold
-        pred[idx] = 5
+        pred[idx] = 1
         pred[~idx] = 0
 
         # Calculate precision recall
-        precision, recall, fbeta_score, support = precision_recall_fscore_support(original_obj,pred, average="macro", pos_label=5)
+        precision, recall, fbeta_score, support = precision_recall_fscore_support(original_obj,pred, average="macro", pos_label=1)
         precisions.append(precision)
         recalls.append(recall)
 
@@ -98,46 +99,54 @@ def create_model(matrix, hidden=3000, epochs=300):
 
 	return model
 
-def test():
-	matrix_df = drug_adr_matrix()
+def main():
+    matrix_df = pm.get_drug_adr_matrix()
+    drugs = matrix_df.index.values.tolist()
+    adrs = matrix_df.columns.values.tolist()
 
-	matrix_df, test_set = train_and_test_set(matrix_df)
-	test_set_mat = test_set.as_matrix() / 5
+    print(matrix_df.as_matrix().shape)
 
-	# retrieve the numpy matrix, drugs names and adrs names
-	matrix = matrix_df.as_matrix()
-	matrix = matrix / 5
+    # append descriptors
+    matrix_df = append_descriptors(matrix_df)
 
-	# train model
-	model = create_model(matrix, hidden=2000, epochs=300)
+    print(matrix_df.as_matrix().shape)
 
-	rmse = 0
-	roc_areas = []
-	threshs = []
-	predictions = []
-	for drug in test_set_mat:
-		obj = drug.copy()
+    # retrieve the numpy matrix, drugs names and adrs names
+    matrix = matrix_df.as_matrix() / 5
+
+    # Divide into train, validation and test set
+    matrix, test_set = cross_validation.train_test_split(matrix, test_size=0.3)
+
+    # train model
+    model = create_model(matrix, hidden=3000, epochs=20)
+
+    rmse = 0
+    roc_areas = []
+    threshs = []
+    predictions = []
+    for drug in test_set:
+        obj = drug.copy()
 
         # Put some of them in 0
-		obj = random_delete_adrs(obj)
+        obj = test.random_delete_adrs(obj,len(adrs))
 
-		d, p = predict(model, np.array([obj]))
-		predictions.append(p[0])
-		rmse = rmse + RMSE(p[0], drug)
+        d, p = predict(model, np.array([obj]))
+        predictions.append((p[0])[0:len(adrs)])
+        rmse = rmse + RMSE((p[0])[0:len(adrs)], drug[0:len(adrs)] )
 
-		fpr, tpr, threshold = roc_curve(drug, p[0], pos_label=1)
+        fpr, tpr, threshold = roc_curve(drug[0:len(adrs)], (p[0])[0:len(adrs)], pos_label=1)
 
-		roc_auc = auc(fpr,tpr)
-		roc_areas.append(roc_auc)
+        roc_auc = auc(fpr,tpr)
+        roc_areas.append(roc_auc)
 		
-		youden = tpr + (1-fpr)
-		maxIndex = np.where(youden == max(youden))
-		threshs.append(threshold[maxIndex[0][0]])
+        youden = tpr + (1-fpr)
+        maxIndex = np.where(youden == max(youden))
+        threshs.append(threshold[maxIndex[0][0]])
 
-	print(rmse / test_set_mat.shape[0])
-	print_stats(roc_areas,'roc_area')
+    print(rmse / test_set.shape[0])
+    print_stats(roc_areas,'roc_area')
 
-	precision_recall(predictions,sp.mean(threshs),test_set)
+    precision_recall(predictions,sp.mean(threshs),test_set[:,0:len(adrs)])
 
 def log(message):
     """ logs a given message, binding a timestamp """
@@ -147,4 +156,5 @@ def log(message):
     print('[' + time_string + ']', message)
 	
 if __name__ == "__main__":
-    test()
+    const.MAX_TO_KEEP = 0.7
+    main()
