@@ -134,7 +134,7 @@ def save_mat():
     """ Saves training set in matlab format """
 
     # Fetch training set
-    matrix_df = drug_adr_matrix()
+    matrix_df = get_drug_adr_matrix()
     train_set, _ = train_and_test_set(matrix_df)
 
     # Save in a matlab readable format
@@ -145,7 +145,8 @@ def test_results():
     """ Reads matlab factorized matrix and tests it """
 
     # Fetch test set
-    matrix_df = drug_adr_matrix()
+    matrix_df = get_drug_adr_matrix()
+    adrs = matrix_df.columns.values.tolist()
     _, test_set = train_and_test_set(matrix_df)
 
     # Load matlab results
@@ -153,8 +154,15 @@ def test_results():
     q_mat = mat_contents['q']
 
     # Test the solution and print it to the user
-    _, threshold, predictions = test.test_roc(q_mat, test_set)
-    test.precision_recall(predictions, threshold, test_set)
+    _, threshold, predictions = test.test_roc(q_mat, test_set, len(adrs))
+    test.precision_recall(predictions, threshold, test_set, len(adrs))
+
+def unset_relation(matrix_df, drugs_adrs):
+    """ Receives a data frame and a pair of drug-adr relations
+    Use matrix_df = pd.DataFrame(matrix, index=drugs, columns=adrs) """
+    
+    for drug, adr in drugs_adrs:
+        matrix_df.loc[drug, adr] = 0
 
 
 def predict_adrs(q_mat, obj):
