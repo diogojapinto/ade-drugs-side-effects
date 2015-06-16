@@ -1,5 +1,5 @@
 """
-    Interface for connecting to ADReCS database
+    Library for interacting with ADReCS database
 """
 
 import mysql.connector as mysql

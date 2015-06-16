@@ -16,7 +16,7 @@ def log(message):
 
     print('[' + time_string + ']', message)
 
-def convertdrug_name_to_id(drug_name):
+def convert_drug_name_to_id(drug_name):
     """ Converts a given drug name to the id used in ADReCS """
 
     try:
