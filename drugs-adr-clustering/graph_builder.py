@@ -4,6 +4,7 @@
 
 # import networkx as nx
 import numpy as np
+import atc_code as atc
 from constants import ADRS_WEIGHT
 
 def build_drugs_dict(drugs):
@@ -66,4 +67,8 @@ def build_bipartite_graph(cursor, drugs_dict, adrs_dict):
 
         graph[index1, index2] = ADRS_WEIGHT
 
+    return graph
+
+def build_atc_mat(atc_codes):
+    graph = np.array([atc.Atc_code(code).get_descriptor() for code in atc_codes])
     return graph

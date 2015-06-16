@@ -4,13 +4,14 @@
 
 import mysql.connector as mysql
 import graph_builder as gb
+import atc_code as atc
 import pandas as pd
 import pickle as pk
 
 
 def get_connection():
     """ Establishes a connection to the ADReCS database """
-    cnx = mysql.connect(user='dpinto', password='dpinto', host='porto.fe.up.pt', database='ADReCS')
+    cnx = mysql.connect(user='pcosta', password='pcosta', host='porto.fe.up.pt', database='ADReCS')
     return cnx
 
 
@@ -102,6 +103,24 @@ def get_all_drugs_names():
 
     return names
 
+def get_drug_atc(drug_id):
+    """ Returns the atc_code of a drug """
+
+    query = """SELECT atc
+               FROM drug 
+               WHERE id = %s"""
+
+    cnx = get_connection()
+    cursor = cnx.cursor()
+    cursor.execute(query, (drug_id,))
+
+    atc_code = cursor.fetchone()[0]
+
+    cursor.close()
+    close_connection(cnx)
+
+    return atc_code
+
 def get_connections_drug_to_drug():
     """ Retrieves the drug-adr connections, and builds a graph on it (drug-drug) """
     query = """SELECT drug_id, adr_id
@@ -130,14 +149,21 @@ def get_drug_adr_matrix():
     cursor = cnx.cursor()
     cursor.execute(query)
 
-    drugs_dict = gb.build_drugs_dict(get_all_drugs_ids())
+    drugs = get_all_drugs_ids()
+    
+    drugs_dict = gb.build_drugs_dict(drugs)
     adrs_dict = gb.build_drugs_dict(get_all_adrs_ids())
-
     matrix = gb.build_bipartite_graph(cursor, drugs_dict, adrs_dict)
-
-    matrix_df = pd.DataFrame(matrix, index=drugs_dict, columns=adrs_dict)
 
     cursor.close()
     close_connection(cnx)
+
+    atc_codes = [get_drug_atc(drug_id) for drug_id in drugs]
+    atc_mat = gb.build_atc_mat(atc_codes)
+
+    matrix_df = pd.DataFrame(matrix, index=drugs_dict, columns=adrs_dict)
+    atc_df = pd.DataFrame(atc_mat, index=drugs_dict, columns=atc.first_level_codes)
+
+    matrix_df = pd.concat([matrix_df,atc_df], axis=1, join_axes=[matrix_df.index])
 
     return matrix_df
