@@ -3,8 +3,8 @@
 """
 
 import pandas as pd
-from ..utils import log
-from ..libs.adrecs import get_drug_adr_matrix
+from utils import log
+from libs.adrecs import get_drug_adr_matrix
 
 ADRS_FILE = '../data/adrs.p'
 

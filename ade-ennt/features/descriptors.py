@@ -4,8 +4,8 @@
 
 import pandas as pd
 import numpy as np
-from ..utils import convert_drug_name_to_id
-from ..utils import log
+from utils import convert_drug_name_to_id
+from utils import log
 
 DESCRIPTORS_FILE = '../data/descriptors.csv'
 RAW_DESCRIPTORS_CSV = '../data/drugs1_2d.csv'
