@@ -224,7 +224,7 @@ def get_drugs_name_to_id_dict():
     cursor = cnx.cursor()
 
     cursor.execute(query)
-    drugs_dict = {x[0]: x[1] for x in cursor.fetchall()}
+    drugs_dict = {x[0].lower(): x[1] for x in cursor.fetchall()}
 
     cursor.close()
     close_connection(cnx)
