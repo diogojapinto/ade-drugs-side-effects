@@ -7,7 +7,8 @@ from features.features_management import get_feature
 
 ALGORITHMS = {
     'svd': compute_svd,
-    'rbm': compute_rbm
+    'rbm': compute_rbm,
+    'pca': compute_pca
 }
 
 def get_dim_feature(ftr, alg):
@@ -49,3 +50,8 @@ def compute_svd(matrix_df):
 def compute_rbm(matrix_df):
     """ Returns an indexed matrix, with the Restricted-Boltzman-Machine computed """
     return matrix_df
+
+def compute_pca(matrix_df):
+    """ Returns an indexed matrix, with the Principal-Component-Analysis computed """
+    return matrix_df
+    

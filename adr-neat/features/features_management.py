@@ -14,10 +14,10 @@ FEATURES = {
     'descriptors': descriptors.generate
 }
 
-def get_feature(feature_nr):
+def get_feature(ftr):
     """ Retrieves the selected feature """
 
-    return FEATURES[feature_nr]()
+    return FEATURES[ftr]()
 
 
 def get_merged_features(ftrs):
