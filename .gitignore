@@ -14,4 +14,4 @@ drugs_graph/*.txt
 simple-correlation/helpers/popular_pmids.R
 drugs-adr-clustering/data/
 faers-import/data
-ade-ennt/data/
+adr-neat/data/
