@@ -1,5 +1,5 @@
 """
-    Utilities for computing and managing SVD computations
+    Utilities for computing and managing Singular-Value-Decomposition computations
 """
 
 import numpy as np
