@@ -1,5 +1,5 @@
 """
-    Singleton class that manages the features extraction and merge
+    Manages the features extraction and merge
 """
 
 import features.adrs as adrs
@@ -19,14 +19,13 @@ def get_feature(feature_nr):
 
     return FEATURES[feature_nr]()
 
-def get_merged_features(features_nrs):
+
+def get_merged_features(ftrs):
     """ Retrieves the selected features, merged by id """
 
-    result_df = features_nrs[features_nrs[0]]()
+    result_df = get_feature(ftrs[0])()
 
-    for feature in FEATURES[1:]:
-        result_df = result_df.join(FEATURES[feature](), how='inner')
+    for ftr in FEATURES[1:]:
+        result_df = result_df.join(get_feature(ftr), how='inner')
 
     return result_df
-
-
