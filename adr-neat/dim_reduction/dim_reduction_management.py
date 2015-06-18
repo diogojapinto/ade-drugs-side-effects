@@ -4,6 +4,8 @@
 from dim_reduction import svd
 import pandas as pd
 from features.features_management import get_feature
+from sklearn import preprocessing
+from dim_reduction import (rbm, pca)
 
 ALGORITHMS = {
     'svd': compute_svd,
@@ -33,14 +35,20 @@ def get_dim_features(ftr_alg_pairs):
 
 def compute_svd(matrix_df):
     """ Returns an indexed matrix, with the Singular-Value-Decomposition computed """
-    drugs = matrix_df.index.values.tolist()
 
-    u_mat, s_array, v_mat = svd.compute_svd(matrix_df)
+    drugs = matrix_df.index.values.tolist()
+    matrix = matrix_df.values
+
+    u_mat, s_array, v_mat = svd.compute_svd(matrix)
     u_mat, s_array, v_mat = svd.reduce_singular_values(u_mat, s_array, v_mat)
     p_mat, q_mat = svd.get_scaled_matrices(u_mat, s_array, v_mat)
-    p_mat, q_mat = svd.gradient_descent(matrix_df.iloc.as_matrix(), p_mat, q_mat, 200)
+    #p_mat, q_mat = svd.gradient_descent(matrix_df.iloc.as_matrix(), p_mat, q_mat, 200)
 
     values = svd.reconstruct_matrix(p_mat, q_mat)
+
+    # Remove if not needed
+    min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
+    values = min_max_scaler.fit_transform(values)
 
     svd_df = pd.DataFrame(values, index=drugs)
 
@@ -49,9 +57,34 @@ def compute_svd(matrix_df):
 
 def compute_rbm(matrix_df):
     """ Returns an indexed matrix, with the Restricted-Boltzman-Machine computed """
-    return matrix_df
+
+    drugs = matrix_df.index.values.tolist()
+    matrix = matrix_df.values
+
+    values = rbm.compute_rbm(matrix)
+
+
+    # Remove if not needed
+    min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
+    values = min_max_scaler.fit_transform(values)
+
+    rbm_df = pd.DataFrame(values, index=drugs)
+
+    return rbm_df
 
 def compute_pca(matrix_df):
     """ Returns an indexed matrix, with the Principal-Component-Analysis computed """
-    return matrix_df
-    
+
+    drugs = matrix_df.index.values.tolist()
+    matrix = matrix_df.values
+
+    values = pca.compute_pca(matrix)
+
+
+    # Remove if not needed
+    min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
+    values = min_max_scaler.fit_transform(values)
+
+    pca_df = pd.DataFrame(values, index=drugs)
+
+    return pca_df

@@ -4,7 +4,6 @@
 
 from numpy import linalg
 from sklearn.decomposition import PCA
-from sklearn import preprocessing
 from config import ENERGY_TO_RETAIN
 
 def compute_pca(matrix):
@@ -17,9 +16,5 @@ def compute_pca(matrix):
     model.fit(matrix)
 
     values = model.transform(matrix)
-
-    # Remove if not needed
-    min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
-    values = min_max_scaler.fit_transform(values)
 
     return values
