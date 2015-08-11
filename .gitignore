@@ -15,3 +15,5 @@ simple-correlation/helpers/popular_pmids.R
 drugs-adr-clustering/data/
 faers-import/data
 adr-neat/data/
+patients/data/
+
