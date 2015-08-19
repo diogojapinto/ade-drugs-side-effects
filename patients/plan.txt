@@ -1,0 +1,11 @@
+import OMOP
+
+load patients data in a 3D tensor
+
+summarize the patient profile
+
+create a deep neural network, which receives the last N months of data, current prescribed medicine, plus a summary of the patient, and outputs the prospects of the following N months
+
+analyze how varying N and M affects performance
+
+try to show the model finding ADEs present in the ADReCS

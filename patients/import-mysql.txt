@@ -1,0 +1,313 @@
+%%%
+mysql --local-infile -uroot -pyourpwd yourdbname
+%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS CONDITION_ERA;
+
+CREATE TABLE CONDITION_ERA
+(
+CONDITION_ERA_ID char(44),
+CONDITION_ERA_START_DATE date,
+PERSON_ID char(44),
+CONFIDENCE char(44),
+CONDITION_ERA_END_DATE date,
+CONDITION_CONCEPT_ID char(44),
+CONDITION_OCCURRENCE_TYPE char(6),
+CONDITION_OCCURRENCE_COUNT char(44)
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/condition_era.csv'
+into table CONDITION_ERA
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES
+(CONDITION_ERA_ID, @d1, PERSON_ID, CONFIDENCE, @d2, CONDITION_CONCEPT_ID, CONDITION_OCCURRENCE_TYPE, CONDITION_OCCURRENCE_COUNT)
+SET CONDITION_ERA_START_DATE = STR_TO_DATE(@d1, '%d-%b-%Y'),
+    CONDITION_ERA_END_DATE = STR_TO_DATE(@d2, '%d-%b-%Y');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS CONDITION_OCCURRENCE;
+
+CREATE TABLE CONDITION_OCCURRENCE
+(
+CONDITION_OCCURRENCE_ID char(44 ),
+CONDITION_START_DATE date ,
+PERSON_ID char(44 ),
+CONDITION_END_DATE date ,
+CONDITION_OCCURRENCE_TYPE char(6 ),
+CONDITION_CONCEPT_ID char(44 ),
+STOP_REASON char(40 ),
+DX_QUALIFIER char(40 ),
+SOURCE_CONDITION_CODE char(40 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/condition_occurrence.csv'
+into table CONDITION_OCCURRENCE
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS CONDITION_OCCURRENCE_REF;
+
+CREATE TABLE CONDITION_OCCURRENCE_REF
+(
+CONDITION_OCCURRENCE_TYPE char(6 ),
+CONDITION_OCCURRENCE_TYPE_DESC char(240 ),
+PERSISTENCE_WINDOW char(44 ),
+CONDITION_OCCURRENCE_POSITION char(40 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/condition_occurrence_ref.csv'
+into table CONDITION_OCCURRENCE_REF
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS DRUG_ERA;
+
+CREATE TABLE DRUG_ERA
+(
+DRUG_ERA_ID char(44 ),
+DRUG_ERA_START_DATE date ,
+DRUG_ERA_END_DATE date ,
+PERSON_ID char(44 ),
+DRUG_EXPOSURE_TYPE char(6 ),
+DRUG_CONCEPT_ID char(44 ),
+DRUG_EXPOSURE_COUNT char(44 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/drug_era.csv'
+into table DRUG_ERA
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES
+(DRUG_ERA_ID, @d1, @d2, PERSON_ID, DRUG_EXPOSURE_TYPE, DRUG_CONCEPT_ID, DRUG_EXPOSURE_COUNT)
+SET DRUG_ERA_START_DATE = STR_TO_DATE(@d1, '%d-%b-%Y'),
+    DRUG_ERA_END_DATE = STR_TO_DATE(@d2, '%d-%b-%Y');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS DRUG_EXPOSURE;
+
+CREATE TABLE DRUG_EXPOSURE
+(
+DRUG_EXPOSURE_ID char(44 ),
+DRUG_EXPOSURE_START_DATE date ,
+DRUG_EXPOSURE_END_DATE date ,
+PERSON_ID char(44 ),
+DRUG_CONCEPT_ID char(44 ),
+DRUG_EXPOSURE_TYPE char(6 ),
+STOP_REASON char(40 ),
+REFILLS char(44 ),
+DRUG_QUANTITY char(44 ),
+DAYS_SUPPLY char(44 ),
+SOURCE_DRUG_CODE char(40 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/drug_exposure.csv'
+into table DRUG_EXPOSURE
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES
+(DRUG_EXPOSURE_ID, @d1, @d2, PERSON_ID, DRUG_CONCEPT_ID, DRUG_EXPOSURE_TYPE, STOP_REASON, REFILLS, DRUG_QUANTITY, DAYS_SUPPLY, SOURCE_DRUG_CODE)
+SET DRUG_EXPOSURE_START_DATE = STR_TO_DATE(@d1, '%d-%b-%Y'),
+    DRUG_EXPOSURE_END_DATE = STR_TO_DATE(@d2, '%d-%b-%Y');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS DRUG_EXPOSURE_REF;
+
+CREATE TABLE DRUG_EXPOSURE_REF
+(
+DRUG_EXPOSURE_TYPE char(6 ),
+DRUG_EXPOSURE_TYPE_DESC char(240 ),
+PERSISTENCE_WINDOW char(44 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/drug_exposure_ref.csv'
+into table DRUG_EXPOSURE_REF
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS DRUG_EXPOSURE_TYPE;
+
+CREATE TABLE DRUG_EXPOSURE_TYPE
+(
+DRUG_EXPOSURE_TYPE char(6 ),
+DRUG_EXPOSURE_TYPE_DESC char(240 ),
+PERSISTENCE_WINDOW char(44 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/drug_exposure_type.csv'
+into table DRUG_EXPOSURE_TYPE
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS OBSERVATION;
+
+CREATE TABLE OBSERVATION
+(
+OBS_OCCURRENCE_ID char(44 ),
+PERSON_ID char(44 ),
+SOURCE_OBS_CODE char(40 ),
+OBS_CONCEPT_ID char(44 ),
+OBS_VALUE_AS_NUMBER char(44 ),
+OBS_DATE date ,
+OBS_RANGE_LOW char(44 ),
+OBS_RANGE_HIGH char(44 ),
+OBS_TYPE char(6 ),
+OBS_VALUE_AS_STRING char(120 ),
+OBS_VALUE_AS_CONCEPT_ID char(44 ),
+OBS_UNITS_CONCEPT_ID char(44 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/observation.csv'
+into table OBSERVATION
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS OBSERVATION_PERIOD;
+
+CREATE TABLE OBSERVATION_PERIOD
+(
+OBSERVATION_PERIOD_ID char(44 ),
+OBSERVATION_PERIOD_START_DATE date ,
+OBSERVATION_PERIOD_END_DATE date ,
+PERSON_ID char(44 ),
+PERSON_STATUS_CONCEPT_ID char(44 ),
+RX_DATA_AVAILABILITY char(2 ),
+DX_DATA_AVAILABILITY char(2 ),
+HOSPITAL_DATA_AVAILABILITY char(2 ),
+CONFIDENCE char(60 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/observation_period.csv'
+into table OBSERVATION_PERIOD
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES
+(OBSERVATION_PERIOD_ID, @d1, @d2, PERSON_ID, PERSON_STATUS_CONCEPT_ID, RX_DATA_AVAILABILITY, DX_DATA_AVAILABILITY, HOSPITAL_DATA_AVAILABILITY, CONFIDENCE)
+SET OBSERVATION_PERIOD_START_DATE = STR_TO_DATE(@d1, '%d-%b-%Y'),
+    OBSERVATION_PERIOD_END_DATE = STR_TO_DATE(@d2, '%d-%b-%Y');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS OBSERVATION_TYPE_REF;
+
+CREATE TABLE OBSERVATION_TYPE_REF
+(
+OBSERVATION_TYPE char(6 ),
+OBSERVATION_TYPE_DESC text
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/observation_type_ref.csv'
+into table OBSERVATION_TYPE_REF
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS PERSON;
+
+CREATE TABLE PERSON
+(
+PERSON_ID char(44 ),
+YEAR_OF_BIRTH char(44 ),
+GENDER_CONCEPT_ID char(44 ),
+RACE_CONCEPT_ID char(44 ),
+LOCATION_CONCEPT_ID char(44 ),
+SOURCE_PERSON_KEY char(64 ),
+SOURCE_GENDER_CODE char(40 ),
+SOURCE_LOCATION_CODE char(40 ),
+SOURCE_RACE_CODE char(40 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/person.csv'
+into table PERSON
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS PROC_OCCURRENCE_REF;
+
+CREATE TABLE PROC_OCCURRENCE_REF
+(
+PROCEDURE_OCCURRENCE_TYPE char(6 ),
+PROCEDURE_OCCURRENCE_TYP_DESC text,
+PROCEDURE_OCCURRENCE_POSITION char(40 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/proc_occurrence_ref.csv'
+into table PROC_OCCURRENCE_REF
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+DROP TABLE IF EXISTS VISIT_OCCURRENCE;
+
+CREATE TABLE VISIT_OCCURRENCE
+(
+VISIT_OCCURRENCE_ID char(44 ),
+VISIT_START_DATE date ,
+VISIT_END_DATE date ,
+PERSON_ID char(44 ),
+VISIT_CONCEPT_ID char(44 ),
+SOURCE_VISIT_CODE char(40 )
+);
+
+LOAD DATA
+LOCAL INFILE '/home/diogo/dev/workspace-bolsa/patients/data/OSIM2_10M_MSLR_MEDDRA_6_CSV/visit_occurrence.csv'
+into table VISIT_OCCURRENCE
+FIELDS TERMINATED BY ','
+       ENCLOSED BY '"'
+LINES TERMINATED BY '|\n'
+IGNORE 1 LINES
+(VISIT_OCCURRENCE_ID, @d1, @d2, PERSON_ID, VISIT_CONCEPT_ID, SOURCE_VISIT_CODE)
+SET VISIT_START_DATE = STR_TO_DATE(@d1, '%d-%b-%Y'),
+    VISIT_END_DATE = STR_TO_DATE(@d2, '%d-%b-%Y');
