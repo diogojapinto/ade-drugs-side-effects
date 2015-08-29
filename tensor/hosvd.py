@@ -1,12 +1,26 @@
-import tensor_unfolding as un
 import numpy as np
-import scipy as sp
-from sktensor import dtensor
-from reduce_rank import reduce_rank
+from sktensor import dtensor,sptensor
+from utils import reduce_rank
 
-def hosvd(T):
 
-	S = T.copy()
+def _build_sparse_tensor(T):
+	subs = np.nonzero(T)
+	vals = T[subs]
+
+	print(subs)
+	print(vals)
+
+	return sptensor(subs,vals)
+
+def hosvd(T,sparse=False):
+	# Sparse not working due to the function np.linalg.svd(Ai)
+
+	if sparse:
+		T,S = _build_sparse_tensor(T),_build_sparse_tensor(T)
+	else:
+		T = dtensor(T)
+		S = T.copy()
+
 	U = []
 
 	for i in range(T.ndim):
@@ -32,7 +46,7 @@ def reconstruct_tensor(S,U):
 	return T_hat
 
 if __name__ == "__main__":
-	
+
 	# user, query, page
 	Toy = np.zeros((4,4,4))
 	Toy[0,0,0] = 1
@@ -46,7 +60,8 @@ if __name__ == "__main__":
 
 	Toy[3,3,3] = 1
 
-	Toy = dtensor(Toy)
-	
+	#Toy = dtensor(Toy)
+
 	S,U = hosvd(Toy)
 	Toy_hat = reconstruct_tensor(S,U)
+	print(Toy_hat)
