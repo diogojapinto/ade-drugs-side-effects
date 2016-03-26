@@ -261,11 +261,10 @@ def FB15kexp(state, channel):
             tmpnl = trainln[:, i * batchsize:(i + 1) * batchsize]
             tmpnr = trainrn[:, i * batchsize:(i + 1) * batchsize]
 
-            print("Train")
             # training iteration
             outtmp = trainfunc(state.lremb, state.lrparam,
                     tmpl, tmpr, tmpo, tmpnl, tmpnr)
-            print("After train")
+
             out += [outtmp[0] / float(batchsize)]
             outb += [outtmp[1]]
             # embeddings normalization
